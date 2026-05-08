@@ -32,7 +32,7 @@ node -e "const yaml=require('js-yaml'),fs=require('fs'); const c=yaml.load(fs.re
 
 ## 注意
 
-1. 版本更新：修改顶部 `// vX.Y` 注释
+1. 每次更改都需要版本更新：根据本次修改的大小，修改顶部 `// vX.Y` 注释
 2. 中文代理组名和注释不翻译保留
 3. flagMap 只包含 7 个地区 (CN/HK/TW/SG/JP/US/KR)，扩展需同步添加
 4. 地区代理组基于 `proxy.name` 中的 emoji 动态生成，不存在时不会创建

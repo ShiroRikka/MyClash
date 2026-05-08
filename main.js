@@ -1,4 +1,4 @@
-// v4.0
+// v4.1
 function main(config) {
   const allProxies = config.proxies || [];
   const CDN = "https://cdn.jsdelivr.net/gh/";
