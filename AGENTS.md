@@ -42,7 +42,7 @@ node test-run.js > processed_config.yaml
 ## 核心实现
 
 - **地区检测**：通过国旗 emoji (flagMap 常用国家) 匹配代理名，自动生成代理组
-- **带宽分级**：`(\d+)\s*MB/s` 正则提取，每间隔1MB/s分组一次，结果：0MB/s,1MB/s...
+- **带宽分级**：`(\d+)\s*MB/s` 正则提取，每间隔1MB/s分组一次
 - **规则**：从 Loyalsoldier/clash-rules 加载，默认结转 `MATCH,节点选择`
 
 ## 注意
@@ -50,4 +50,3 @@ node test-run.js > processed_config.yaml
 1. 不翻译：保留中文注释和代理组名
 2. 版本更新：修改顶部版本号注释 (如 `// v3.1.0`)
 3. 地区代理组基于配置文件中的代理动态生成
-4. 无 lint/typecheck 脚本，无需额外工具链
