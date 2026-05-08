@@ -1,4 +1,4 @@
-// v3.0.1-负载均衡版
+// v3.1.0-负载均衡版
 function main(config) {
   const allProxies = config.proxies || [];
   const CDN = "https://cdn.jsdelivr.net/gh/";
