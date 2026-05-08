@@ -13,14 +13,8 @@ function main(config) {
     "🇹🇼": { name: "中国-台湾", key: "tw" },
     "🇸🇬": { name: "新加坡", key: "sg" },
     "🇯🇵": { name: "日本", key: "jp" },
-    "🇰🇷": { name: "韩国", key: "kr" },
     "🇺🇸": { name: "美国", key: "us" },
-    "🇬🇧": { name: "英国", key: "gb" },
-    "🇩🇪": { name: "德国", key: "de" },
-    "🇫🇷": { name: "法国", key: "fr" },
-    "🇦🇺": { name: "澳大利亚", key: "au" },
-    "🇨🇦": { name: "加拿大", key: "ca" },
-    "🇮🇪": { name: "爱尔兰", key: "ie" },
+    "🇰🇷": { name: "韩国", key: "kr" },
   };
 
   const foundFlags = new Set();
