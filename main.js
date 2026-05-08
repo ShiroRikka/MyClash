@@ -56,9 +56,7 @@ function main(config) {
   const globalStrategies = [
     "自动选择",
     "自动回退",
-    "负载均衡-轮询",
-    "负载均衡-哈希",
-    "负载均衡-粘滞",
+    "负载均衡",
     "手动切换",
   ];
 
@@ -134,7 +132,7 @@ function main(config) {
   });
 
   proxyGroups.push({
-    name: "负载均衡-轮询",
+    name: "负载均衡",
     icon: `${CDN_VERGE}balance.svg`,
     "include-all": true,
     "exclude-filter": "CN|China",
@@ -142,28 +140,6 @@ function main(config) {
     url: "https://www.gstatic.com/generate_204",
     interval: 300,
     strategy: "round-robin",
-  });
-
-  proxyGroups.push({
-    name: "负载均衡-哈希",
-    icon: `${CDN_VERGE}merry_go.svg`,
-    "include-all": true,
-    "exclude-filter": "CN|China",
-    type: "load-balance",
-    url: "https://www.gstatic.com/generate_204",
-    interval: 300,
-    strategy: "consistent-hashing",
-  });
-
-  proxyGroups.push({
-    name: "负载均衡-粘滞",
-    icon: `${CDN_VERGE}link.svg`,
-    "include-all": true,
-    "exclude-filter": "CN|China",
-    type: "load-balance",
-    url: "https://www.gstatic.com/generate_204",
-    interval: 300,
-    strategy: "sticky-sessions",
   });
 
   proxyGroups.push({
