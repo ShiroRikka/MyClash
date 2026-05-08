@@ -174,18 +174,7 @@ function main(config) {
     const match = proxy.name.match(/(\d+)\s*MB\/s/i);
     if (match) {
       const speed = parseInt(match[1]);
-      let tier;
-      if (speed >= 100) {
-        tier = "100MB+";
-      } else if (speed >= 50) {
-        tier = "50-100MB";
-      } else if (speed >= 20) {
-        tier = "20-50MB";
-      } else if (speed >= 10) {
-        tier = "10-20MB";
-      } else {
-        tier = "0-10MB";
-      }
+      const tier = `${speed}MB/s`;
       if (!bandwidthGroups[tier]) {
         bandwidthGroups[tier] = [];
       }
@@ -193,8 +182,7 @@ function main(config) {
     }
   }
 
-  const tierOrder = ["100MB+", "50-100MB", "20-50MB", "10-20MB", "0-10MB"];
-  const availableTiers = tierOrder.filter((tier) => bandwidthGroups[tier] && bandwidthGroups[tier].length > 0);
+  const availableTiers = Object.keys(bandwidthGroups).sort((a, b) => parseInt(b) - parseInt(a));
 
   const globalStrategies = [
     "自动选择",
