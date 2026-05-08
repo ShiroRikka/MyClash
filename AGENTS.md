@@ -13,24 +13,8 @@ npm install
 测试文件命名 `Proxies.yaml`，包含 `proxies` 数组：
 
 ```bash
-# 创建测试脚本 test-run.js
-const yaml = require('js-yaml')
-const fs = require('fs')
-const { main } = require('./url-test.js')  // 或 load-balance.js
-
-const config = yaml.load(fs.readFileSync('Proxies.yaml', 'utf8'))
-const result = main(config)
-console.log(yaml.dump(result))
+node -e "const yaml=require('js-yaml'),fs=require('fs'); const c=yaml.load(fs.readFileSync('Proxies.yaml','utf8')); console.log(yaml.dump(require('./main.js').main(c)))" > processed_config.yaml
 ```
-
-```bash
-node test-run.js > processed_config.yaml
-```
-
-## 两个版本
-
-- `url-test.js` - 自动测速，选择延迟最低节点
-- `load-balance.js` - 负载均衡（轮询/哈希/粘滞）
 
 ## 代码风格
 
@@ -41,12 +25,14 @@ node test-run.js > processed_config.yaml
 
 ## 核心实现
 
-- **地区检测**：通过国旗 emoji (flagMap 常用国家) 匹配代理名，自动生成代理组
-- **带宽分级**：`(\d+)\s*MB/s` 正则提取，每间隔1MB/s分组一次
-- **规则**：从 Loyalsoldier/clash-rules 加载，默认结转 `MATCH,节点选择`
+- **地区检测**：通过国旗 emoji (flagMap) 匹配代理名，动态生成代理组
+- **带宽分级**：`(\d+(?:\.\d+)?)\s*MB/s` 正则提取，按数值降序分组
+- **规则集**：从 Loyalsoldier/clash-rules 加载，默认结转 `MATCH,节点选择`
+- **代理组**：节点选择 → 各地区组 → 带宽组 → 全局策略组 → 广告/应用/全球组
 
 ## 注意
 
-1. 不翻译：保留中文注释和代理组名
-2. 版本更新：修改顶部版本号注释 (如 `// v3.1.0`)
-3. 地区代理组基于配置文件中的代理动态生成
+1. 版本更新：修改顶部 `// vX.Y` 注释
+2. 中文代理组名和注释不翻译保留
+3. flagMap 只包含 7 个地区 (CN/HK/TW/SG/JP/US/KR)，扩展需同步添加
+4. 地区代理组基于 `proxy.name` 中的 emoji 动态生成，不存在时不会创建
