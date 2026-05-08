@@ -171,10 +171,10 @@ function main(config) {
 
   const bandwidthGroups = {};
   for (const proxy of allProxies) {
-    const match = proxy.name.match(/(\d+)\s*MB\/s/i);
+    const match = proxy.name.match(/(\d+(?:\.\d+)?)\s*MB\/s/i);
     if (match) {
-      const speed = parseInt(match[1]);
-      const tier = `${speed}MB/s`;
+      const speed = parseFloat(match[1]);
+      const tier = `${Math.floor(speed)}MB/s`;
       if (!bandwidthGroups[tier]) {
         bandwidthGroups[tier] = [];
       }
@@ -182,7 +182,11 @@ function main(config) {
     }
   }
 
-  const availableTiers = Object.keys(bandwidthGroups).sort((a, b) => parseInt(b) - parseInt(a));
+  const availableTiers = Object.keys(bandwidthGroups).sort((a, b) => {
+    const numA = parseInt(a);
+    const numB = parseInt(b);
+    return numB - numA;
+  });
 
   const globalStrategies = [
     "自动选择",
