@@ -1,11 +1,19 @@
-// v4.2
+// v4.3
 function main(config) {
-  const allProxies = config.proxies || [];
-  const CDN = "https://cdn.jsdelivr.net/gh/";
-  const CDN_FLAGS = `${CDN}lipis/flag-icons@main/flags/4x3/`;
-  const CDN_QURE = `${CDN}Koolson/Qure@master/IconSet/Color/`;
-  const CDN_VERGE = `${CDN}clash-verge-rev/clash-verge-rev.github.io@main/docs/assets/icons/`;
-  const CDN_STASH = `${CDN}shindgewongxj/WHATSINStash@master/icon/`;
+  // 参数校验：确保传入有效的配置对象
+  if (!config || typeof config !== "object") {
+    throw new TypeError("config 必须是对象")
+  }
+  const allProxies = Array.isArray(config.proxies) ? config.proxies : []
+
+  // 过滤缺少 name 字段的异常节点
+  const validProxies = allProxies.filter(p => p && typeof p.name === "string")
+
+  const CDN = "https://cdn.jsdelivr.net/gh/"
+  const CDN_FLAGS = `${CDN}lipis/flag-icons@main/flags/4x3/`
+  const CDN_QURE = `${CDN}Koolson/Qure@master/IconSet/Color/`
+  const CDN_VERGE = `${CDN}clash-verge-rev/clash-verge-rev.github.io@main/docs/assets/icons/`
+  const CDN_STASH = `${CDN}shindgewongxj/WHATSINStash@master/icon/`
 
   const flagMap = {
     "🇨🇳": { name: "中国", key: "cn" },
@@ -15,64 +23,64 @@ function main(config) {
     "🇯🇵": { name: "日本", key: "jp" },
     "🇺🇸": { name: "美国", key: "us" },
     "🇰🇷": { name: "韩国", key: "kr" },
-  };
-
-  const foundFlags = new Set();
-  for (const proxy of allProxies) {
-    for (const flag of Object.keys(flagMap)) {
-      if (proxy.name.includes(flag)) {
-        foundFlags.add(flag);
-      }
-    }
   }
+
+  // 优化地区检测：将所有代理名拼接后一次性扫描，避免双重循环
+  const allNames = validProxies.map(p => p.name).join(" ")
+  const foundFlags = new Set(
+    Object.keys(flagMap).filter(flag => allNames.includes(flag))
+  )
 
   const availableRegions = [...foundFlags].map((flag) => ({
     name: `${flag}${flagMap[flag].name}`,
     flag: flagMap[flag].key,
     filter: flag,
-  }));
+  }))
 
-  availableRegions.sort((a, b) => a.name.localeCompare(b.name, "zh"));
+  availableRegions.sort((a, b) => a.name.localeCompare(b.name, "zh"))
 
-  const bandwidthGroups = {};
-  for (const proxy of allProxies) {
-    const match = proxy.name.match(/(\d+(?:\.\d+)?)\s*MB\/s/i);
+  // 带宽分级正则预编译，避免重复构建
+  const speedRegex = /(\d+(?:\.\d+)?)\s*MB\/s/i
+  const bandwidthGroups = {}
+  for (const proxy of validProxies) {
+    const match = proxy.name.match(speedRegex)
     if (match) {
-      const speed = parseFloat(match[1]);
-      let tier;
+      const speed = parseFloat(match[1])
+      let tier
       if (speed >= 6) {
-        tier = "6+MB/s";
+        tier = "6+MB/s"
       } else {
-        const floorSpeed = Math.floor(speed);
-        tier = floorSpeed < 1 ? "1MB/s" : `${floorSpeed}MB/s`;
+        const floorSpeed = Math.floor(speed)
+        // 修复：低速节点(<1MB/s)不再伪装成 1MB/s
+        tier = floorSpeed < 1 ? "<1MB/s" : `${floorSpeed}MB/s`
       }
       if (!bandwidthGroups[tier]) {
-        bandwidthGroups[tier] = [];
+        bandwidthGroups[tier] = []
       }
-      bandwidthGroups[tier].push(proxy.name);
+      bandwidthGroups[tier].push(proxy.name)
     }
   }
 
   const availableTiers = Object.keys(bandwidthGroups).sort((a, b) => {
-    const isAHigh = a.startsWith("6+");
-    const isBHigh = b.startsWith("6+");
-    if (isAHigh) return -1;
-    if (isBHigh) return 1;
-    const numA = parseInt(a);
-    const numB = parseInt(b);
-    return numB - numA;
-  });
+    const isAHigh = a.startsWith("6+")
+    const isBHigh = b.startsWith("6+")
+    if (isAHigh) return -1
+    if (isBHigh) return 1
+    const numA = parseInt(a)
+    const numB = parseInt(b)
+    return numB - numA
+  })
 
   const globalStrategies = [
     "自动选择",
     "自动回退",
     "负载均衡",
     "手动切换",
-  ];
+  ]
 
-  const regionNames = availableRegions.map((r) => r.name);
+  const regionNames = availableRegions.map((r) => r.name)
 
-  const proxyGroups = [];
+  const proxyGroups = []
 
   proxyGroups.push({
     name: "节点选择",
@@ -84,14 +92,14 @@ function main(config) {
       ...globalStrategies,
       "DIRECT",
     ],
-  });
+  })
 
   proxyGroups.push({
     name: "手动切换",
     icon: `${CDN_STASH}select.png`,
     "include-all": true,
     type: "select",
-  });
+  })
 
   for (const region of availableRegions) {
     proxyGroups.push({
@@ -103,11 +111,11 @@ function main(config) {
       url: "https://www.gstatic.com/generate_204",
       interval: 300,
       strategy: "round-robin",
-    });
+    })
   }
 
   for (const tier of availableTiers) {
-    const proxies = bandwidthGroups[tier];
+    const proxies = bandwidthGroups[tier]
     if (proxies.length > 0) {
       proxyGroups.push({
         name: tier,
@@ -117,7 +125,7 @@ function main(config) {
         url: "https://www.gstatic.com/generate_204",
         interval: 300,
         strategy: "round-robin",
-      });
+      })
     }
   }
 
@@ -129,7 +137,7 @@ function main(config) {
     type: "url-test",
     interval: 300,
     tolerance: 50,
-  });
+  })
 
   proxyGroups.push({
     name: "自动回退",
@@ -139,7 +147,7 @@ function main(config) {
     type: "fallback",
     url: "https://www.gstatic.com/generate_204",
     interval: 300,
-  });
+  })
 
   proxyGroups.push({
     name: "负载均衡",
@@ -150,21 +158,21 @@ function main(config) {
     url: "https://www.gstatic.com/generate_204",
     interval: 300,
     strategy: "round-robin",
-  });
+  })
 
   proxyGroups.push({
     name: "广告拦截",
     icon: `${CDN_QURE}AdBlack.png`,
     type: "select",
     proxies: ["REJECT", "DIRECT"],
-  });
+  })
 
   proxyGroups.push({
     name: "应用净化",
     icon: `${CDN_QURE}Hijacking.png`,
     type: "select",
     proxies: ["REJECT", "DIRECT"],
-  });
+  })
 
   proxyGroups.push({
     name: "GLOBAL",
@@ -179,11 +187,11 @@ function main(config) {
       "广告拦截",
       "应用净化",
     ],
-  });
+  })
 
-  config["proxy-groups"] = proxyGroups;
+  config["proxy-groups"] = proxyGroups
 
-  const ruleProviderBase = { type: "http", interval: 86400 };
+  const ruleProviderBase = { type: "http", interval: 86400 }
   const ruleProvidersData = [
     { name: "reject", behavior: "domain" },
     { name: "private", behavior: "domain" },
@@ -197,7 +205,7 @@ function main(config) {
     { name: "cncidr", behavior: "ipcidr" },
     { name: "telegramcidr", behavior: "ipcidr" },
     { name: "applications", behavior: "classical" },
-  ];
+  ]
 
   config["rule-providers"] = Object.fromEntries(
     ruleProvidersData.map(({ name, behavior }) => [
@@ -209,7 +217,7 @@ function main(config) {
         path: `./ruleset/${name}.yaml`,
       },
     ]),
-  );
+  )
 
   config["rules"] = [
     "RULE-SET,applications,DIRECT",
@@ -228,7 +236,7 @@ function main(config) {
     "GEOIP,LAN,DIRECT",
     "GEOIP,CN,DIRECT",
     "MATCH,节点选择",
-  ];
+  ]
 
-  return config;
+  return config
 }
