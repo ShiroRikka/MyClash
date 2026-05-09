@@ -14,7 +14,7 @@
 
 将脚本 URL 添加到配置文件：
 
-[脚本地址](https://raw.githubusercontent.com/ShiroRikka/Clash.Meta-Script/main.js)
+[脚本地址](https://raw.githubusercontent.com/ShiroRikka/Clash.Meta-Script/main/main.js)
 
 ## 功能特性
 
