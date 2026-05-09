@@ -1,4 +1,4 @@
-// v4.1
+// v4.2
 function main(config) {
   const allProxies = config.proxies || [];
   const CDN = "https://cdn.jsdelivr.net/gh/";
@@ -39,7 +39,13 @@ function main(config) {
     const match = proxy.name.match(/(\d+(?:\.\d+)?)\s*MB\/s/i);
     if (match) {
       const speed = parseFloat(match[1]);
-      const tier = `${Math.floor(speed)}MB/s`;
+      let tier;
+      if (speed >= 6) {
+        tier = "6+MB/s";
+      } else {
+        const floorSpeed = Math.floor(speed);
+        tier = floorSpeed < 1 ? "1MB/s" : `${floorSpeed}MB/s`;
+      }
       if (!bandwidthGroups[tier]) {
         bandwidthGroups[tier] = [];
       }
@@ -48,6 +54,10 @@ function main(config) {
   }
 
   const availableTiers = Object.keys(bandwidthGroups).sort((a, b) => {
+    const isAHigh = a.startsWith("6+");
+    const isBHigh = b.startsWith("6+");
+    if (isAHigh) return -1;
+    if (isBHigh) return 1;
     const numA = parseInt(a);
     const numB = parseInt(b);
     return numB - numA;
@@ -222,3 +232,5 @@ function main(config) {
 
   return config;
 }
+
+module.exports = { main };
