@@ -1,4 +1,4 @@
-// v4.4
+// v4.5
 function main(config) {
   // 参数校验：确保传入有效的配置对象
   if (!config || typeof config !== "object") {
@@ -76,7 +76,7 @@ function main(config) {
   const unlockMap = {
     "GPT": { name: "GPT解锁", filter: "GPT", icon: "ChatGPT.png" },
     "NF": { name: "Netflix解锁", filter: "NF", icon: "Netflix.png" },
-    "GM": { name: "Gemini解锁", filter: "GM", icon: "Google.png" },
+    "GM": { name: "Gemini解锁", filter: "GM", icon: "https://api.iconify.design/material-symbols/sparkle.svg" },
     "D+": { name: "Disney+解锁", filter: "D\\+", icon: "StreamingCN.png" },
     "YT": { name: "YouTube解锁", filter: "YT-", icon: "YouTube.png" },
     "CL": { name: "Claude解锁", filter: "CL-", icon: "AI.png" },
@@ -92,12 +92,11 @@ function main(config) {
     .map(([key, val]) => ({
       name: val.name,
       filter: val.filter,
-      icon: `${CDN_QURE}${val.icon}`,
+      icon: val.icon.startsWith("http") ? val.icon : `${CDN_QURE}${val.icon}`,
     }))
 
   const globalStrategies = [
     "自动选择",
-    "自动回退",
     "负载均衡",
     "手动切换",
   ]
@@ -127,17 +126,16 @@ function main(config) {
     type: "select",
   })
 
-  // 地区分组
+  // 地区分组（fallback：自动回退到可用节点，用户可手动选择起始节点）
   for (const region of availableRegions) {
     proxyGroups.push({
       name: region.name,
       icon: `${CDN_FLAGS}${region.flag}.svg`,
       "include-all": true,
       filter: region.filter,
-      type: "load-balance",
+      type: "fallback",
       url: "https://www.gstatic.com/generate_204",
       interval: 300,
-      strategy: "round-robin",
     })
   }
 
@@ -179,16 +177,6 @@ function main(config) {
   })
 
   proxyGroups.push({
-    name: "自动回退",
-    icon: `${CDN_STASH}fallback.png`,
-    "include-all": true,
-    "exclude-filter": "CN|China",
-    type: "fallback",
-    url: "https://www.gstatic.com/generate_204",
-    interval: 300,
-  })
-
-  proxyGroups.push({
     name: "负载均衡",
     icon: `${CDN_VERGE}balance.svg`,
     "include-all": true,
@@ -213,6 +201,14 @@ function main(config) {
     proxies: ["REJECT", "DIRECT"],
   })
 
+  // 漏网之鱼：未匹配规则的流量，默认走代理，用户可切换到直连
+  proxyGroups.push({
+    name: "漏网之鱼",
+    icon: `${CDN_QURE}Final.png`,
+    type: "select",
+    proxies: ["节点选择", "DIRECT"],
+  })
+
   proxyGroups.push({
     name: "GLOBAL",
     icon: `${CDN_QURE}Global.png`,
@@ -220,6 +216,7 @@ function main(config) {
     type: "select",
     proxies: [
       "节点选择",
+      "漏网之鱼",
       ...globalStrategies,
       ...regionNames,
       ...unlockGroupNames,
@@ -275,7 +272,7 @@ function main(config) {
     "RULE-SET,telegramcidr,节点选择",
     "GEOIP,LAN,DIRECT",
     "GEOIP,CN,DIRECT",
-    "MATCH,节点选择",
+    "MATCH,漏网之鱼",
   ]
 
   return config
