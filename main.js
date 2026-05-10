@@ -1,4 +1,4 @@
-// v4.3
+// v4.4
 function main(config) {
   // 参数校验：确保传入有效的配置对象
   if (!config || typeof config !== "object") {
@@ -71,6 +71,30 @@ function main(config) {
     return numB - numA
   })
 
+  // ===== 平台解锁分组配置 =====
+  // 根据代理名称中的标记动态生成分组，用户可手动选择对应解锁节点
+  const unlockMap = {
+    "GPT": { name: "GPT解锁", filter: "GPT", icon: "ChatGPT.png" },
+    "NF": { name: "Netflix解锁", filter: "NF", icon: "Netflix.png" },
+    "GM": { name: "Gemini解锁", filter: "GM", icon: "Google.png" },
+    "D+": { name: "Disney+解锁", filter: "D\\+", icon: "StreamingCN.png" },
+    "YT": { name: "YouTube解锁", filter: "YT-", icon: "YouTube.png" },
+    "CL": { name: "Claude解锁", filter: "CL-", icon: "AI.png" },
+    "SP": { name: "Spotify解锁", filter: "SP-", icon: "Spotify.png" },
+  }
+
+  // 预筛选：仅当代理列表中存在至少一个匹配节点时才创建对应解锁分组
+  const availableUnlockGroups = Object.entries(unlockMap)
+    .filter(([key, val]) => {
+      const regex = new RegExp(val.filter)
+      return validProxies.some(p => regex.test(p.name))
+    })
+    .map(([key, val]) => ({
+      name: val.name,
+      filter: val.filter,
+      icon: `${CDN_QURE}${val.icon}`,
+    }))
+
   const globalStrategies = [
     "自动选择",
     "自动回退",
@@ -79,6 +103,7 @@ function main(config) {
   ]
 
   const regionNames = availableRegions.map((r) => r.name)
+  const unlockGroupNames = availableUnlockGroups.map((g) => g.name)
 
   const proxyGroups = []
 
@@ -88,6 +113,7 @@ function main(config) {
     type: "select",
     proxies: [
       ...regionNames,
+      ...unlockGroupNames,
       ...availableTiers,
       ...globalStrategies,
       "DIRECT",
@@ -101,6 +127,7 @@ function main(config) {
     type: "select",
   })
 
+  // 地区分组
   for (const region of availableRegions) {
     proxyGroups.push({
       name: region.name,
@@ -114,6 +141,18 @@ function main(config) {
     })
   }
 
+  // 平台解锁分组（手动选择）
+  for (const group of availableUnlockGroups) {
+    proxyGroups.push({
+      name: group.name,
+      icon: group.icon,
+      "include-all": true,
+      filter: group.filter,
+      type: "select",
+    })
+  }
+
+  // 带宽分组
   for (const tier of availableTiers) {
     const proxies = bandwidthGroups[tier]
     if (proxies.length > 0) {
@@ -183,6 +222,7 @@ function main(config) {
       "节点选择",
       ...globalStrategies,
       ...regionNames,
+      ...unlockGroupNames,
       ...availableTiers,
       "广告拦截",
       "应用净化",
