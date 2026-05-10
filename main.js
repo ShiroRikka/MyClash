@@ -1,4 +1,4 @@
-// v4.5
+// v4.5.1
 function main(config) {
   // 参数校验：确保传入有效的配置对象
   if (!config || typeof config !== "object") {
@@ -76,7 +76,7 @@ function main(config) {
   const unlockMap = {
     "GPT": { name: "GPT解锁", filter: "GPT", icon: "ChatGPT.png" },
     "NF": { name: "Netflix解锁", filter: "NF", icon: "Netflix.png" },
-    "GM": { name: "Gemini解锁", filter: "GM", icon: "https://api.iconify.design/material-symbols/sparkle.svg" },
+    "GM": { name: "Gemini解锁", filter: "GM", icon: "https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@latest/icons/gemini.svg" },
     "D+": { name: "Disney+解锁", filter: "D\\+", icon: "StreamingCN.png" },
     "YT": { name: "YouTube解锁", filter: "YT-", icon: "YouTube.png" },
     "CL": { name: "Claude解锁", filter: "CL-", icon: "AI.png" },
@@ -139,14 +139,16 @@ function main(config) {
     })
   }
 
-  // 平台解锁分组（手动选择）
+  // 平台解锁分组（fallback：自动回退可用节点）
   for (const group of availableUnlockGroups) {
     proxyGroups.push({
       name: group.name,
       icon: group.icon,
       "include-all": true,
       filter: group.filter,
-      type: "select",
+      type: "fallback",
+      url: "https://www.gstatic.com/generate_204",
+      interval: 300,
     })
   }
 
