@@ -1,4 +1,4 @@
-// v4.5.1
+// v4.5.2
 function main(config) {
   // 参数校验：确保传入有效的配置对象
   if (!config || typeof config !== "object") {
@@ -97,8 +97,8 @@ function main(config) {
 
   const globalStrategies = [
     "自动选择",
+    "自动回退",
     "负载均衡",
-    "手动切换",
   ]
 
   const regionNames = availableRegions.map((r) => r.name)
@@ -120,10 +120,13 @@ function main(config) {
   })
 
   proxyGroups.push({
-    name: "手动切换",
-    icon: `${CDN_STASH}select.png`,
+    name: "自动回退",
+    icon: `${CDN_STASH}fallback.png`,
     "include-all": true,
-    type: "select",
+    "exclude-filter": "CN|China",
+    type: "fallback",
+    url: "https://www.gstatic.com/generate_204",
+    interval: 300,
   })
 
   // 地区分组（fallback：自动回退到可用节点，用户可手动选择起始节点）
