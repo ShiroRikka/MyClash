@@ -44,3 +44,4 @@ module.exports = { main };
 3. flagMap 只包含 7 个地区 (CN/HK/TW/SG/JP/US/KR)，扩展需同步添加
 4. 地区代理组基于 `proxy.name` 中的 emoji 动态生成，不存在时不会创建
 5. **禁止添加 module.exports** - 某些客户端不支持，会报错
+6. 每次提交前，需检查 `README.md` 是否随本次更改需要同步更新
