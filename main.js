@@ -1,4 +1,4 @@
-// v4.5.2
+// v4.5.4
 function main(config) {
   // 参数校验：确保传入有效的配置对象
   if (!config || typeof config !== "object") {
@@ -16,13 +16,10 @@ function main(config) {
   const CDN_STASH = `${CDN}shindgewongxj/WHATSINStash@master/icon/`
 
   const flagMap = {
-    "🇨🇳": { name: "中国", key: "cn" },
     "🇭🇰": { name: "中国-香港", key: "hk" },
     "🇹🇼": { name: "中国-台湾", key: "tw" },
-    "🇸🇬": { name: "新加坡", key: "sg" },
     "🇯🇵": { name: "日本", key: "jp" },
     "🇺🇸": { name: "美国", key: "us" },
-    "🇰🇷": { name: "韩国", key: "kr" },
   }
 
   // 优化地区检测：将所有代理名拼接后一次性扫描，避免双重循环
@@ -98,7 +95,6 @@ function main(config) {
   const globalStrategies = [
     "自动选择",
     "自动回退",
-    "负载均衡",
   ]
 
   const regionNames = availableRegions.map((r) => r.name)
@@ -179,17 +175,6 @@ function main(config) {
     type: "url-test",
     interval: 300,
     tolerance: 50,
-  })
-
-  proxyGroups.push({
-    name: "负载均衡",
-    icon: `${CDN_VERGE}balance.svg`,
-    "include-all": true,
-    "exclude-filter": "CN|China",
-    type: "load-balance",
-    url: "https://www.gstatic.com/generate_204",
-    interval: 300,
-    strategy: "round-robin",
   })
 
   proxyGroups.push({
