@@ -1,4 +1,4 @@
-// v4.5.4
+// v4.5.5
 function main(config) {
   // 参数校验：确保传入有效的配置对象
   if (!config || typeof config !== "object") {
@@ -264,6 +264,84 @@ function main(config) {
     "GEOIP,CN,DIRECT",
     "MATCH,漏网之鱼",
   ]
+
+  // DNS防泄露+智能分流配置 (v4.5.5)
+  config["dns"] = {
+    enable: true,
+    listen: "0.0.0.0:1053",
+    "prefer-h3": true,
+    "use-hosts": true,
+    "use-system-hosts": true,
+    // 核心：DNS查询遵循代理路由规则，防泄露关键
+    "respect-rules": true,
+    ipv6: false,
+    // 解析DNS服务器域名专用（必须直连）
+    "default-nameserver": [
+      "223.5.5.5",
+      "119.29.29.29",
+    ],
+    "enhanced-mode": "fake-ip",
+    "fake-ip-range": "198.18.0.1/16",
+    // 扩大fake-ip过滤范围，避免关键服务走fake-ip异常
+    "fake-ip-filter": [
+      "*.lan",
+      "localhost.ptlogin2.qq.com",
+      "+.local",
+      "time.*.com",
+      "ntp.*.com",
+      "time.windows.com",
+      "time.apple.com",
+      "swscan.apple.com",
+      "stun.*",
+      "+.stun.*",
+      "geosite:private",
+      "geosite:cn",
+    ],
+    // 策略分流：不同域名走不同DNS
+    "nameserver-policy": {
+      // 国内域名/直连域名 → 国内DoH（直连，不泄露）
+      "geosite:cn,private": [
+        "https://dns.alidns.com/dns-query",
+        "https://doh.pub/dns-query",
+      ],
+      // 国外域名 → 国外DoH（走代理，防泄露）
+      "geosite:geolocation-!cn": [
+        "https://dns.google/dns-query",
+        "https://cloudflare-dns.com/dns-query",
+      ],
+    },
+    // 兜底nameserver
+    nameserver: [
+      "https://dns.alidns.com/dns-query",
+      "https://doh.pub/dns-query",
+    ],
+    // fallback全部使用DoH，DoT的853端口容易被干扰
+    fallback: [
+      "https://dns.google/dns-query",
+      "https://cloudflare-dns.com/dns-query",
+      "https://1.1.1.1/dns-query",
+    ],
+    // 解析代理服务器域名专用（必须直连，确保能连上代理）
+    "proxy-server-nameserver": [
+      "223.5.5.5",
+      "119.29.29.29",
+    ],
+    "fallback-filter": {
+      geoip: true,
+      "geoip-code": "CN",
+      geosite: [
+        "gfw",
+      ],
+      ipcidr: [
+        "240.0.0.0/4",
+      ],
+      domain: [
+        "+.google.com",
+        "+.facebook.com",
+        "+.youtube.com",
+      ],
+    },
+  }
 
   return config
 }
