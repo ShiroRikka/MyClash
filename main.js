@@ -1,4 +1,4 @@
-// v4.5.5
+// v4.5.6
 function main(config) {
   // 参数校验：确保传入有效的配置对象
   if (!config || typeof config !== "object") {
@@ -262,6 +262,7 @@ function main(config) {
     "RULE-SET,telegramcidr,节点选择",
     "GEOIP,LAN,DIRECT",
     "GEOIP,CN,DIRECT",
+    "DST-PORT,123,DIRECT",  // NTP 时间同步必须直连，避免代理导致时间偏差
     "MATCH,漏网之鱼",
   ]
 
@@ -289,6 +290,9 @@ function main(config) {
       "+.local",
       "time.*.com",
       "ntp.*.com",
+      "time.*.cn",
+      "ntp.*.cn",
+      "ntp.ntsc.ac.cn",
       "time.windows.com",
       "time.apple.com",
       "swscan.apple.com",

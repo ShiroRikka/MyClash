@@ -98,6 +98,7 @@ cncidr → DIRECT
 telegramcidr → 节点选择
 GEOIP,LAN → DIRECT
 GEOIP,CN → DIRECT
+DST-PORT,123 → DIRECT   # NTP 时间同步必须直连，避免代理导致时间偏差
 MATCH → 漏网之鱼
 ```
 
@@ -112,7 +113,7 @@ MATCH → 漏网之鱼
 | **DoH only** | 不使用容易被干扰的 DoT (853端口)，全部使用基于 HTTPS 443 的 DoH |
 | **respect-rules** | DNS 查询遵循代理路由规则，国外域名 DNS 经代理隧道发出 |
 | **nameserver-policy** | 智能分流：国内域名 → 阿里/腾讯 DoH（直连快）；国外域名 → Google/Cloudflare DoH（走代理，防泄露） |
-| **fake-ip 增强** | 扩大 fake-ip-filter 范围，时间同步、Apple 服务、STUN 等关键域名避免走 fake-ip |
+|| **fake-ip 增强** | 扩大 fake-ip-filter 范围，时间同步、Apple 服务、STUN 等关键域名避免走 fake-ip（含 `*.cn` 国内 NTP 服务） |
 | **proxy-server-nameserver** | 解析代理节点域名使用国内 DNS 直连，避免代理连不上导致死锁 |
 
 ### DNS 服务器列表
@@ -175,7 +176,7 @@ node -e "const yaml=require('js-yaml'),fs=require('fs'); const c=yaml.load(fs.re
 
 ```
 Clash.Meta-Script/
-├── main.js       # 主脚本 (v4.5.5)
+├── main.js       # 主脚本 (v4.5.6)
 ├── AGENTS.md     # 开发规范与注意事项
 ├── Proxies.yaml  # 测试用代理配置
 ├── package.json  # 项目依赖
