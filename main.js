@@ -254,19 +254,7 @@ function main(config) {
     })
   }
 
-  // 区域标签分组（fallback：自动回退可用节点）
-  for (const group of availableRegionTagGroups) {
-    proxyGroups.push({
-      name: group.name,
-      icon: `${CDN_VERGE}balance.svg`,
-      "include-all": true,
-      filter: group.filter,
-      type: "fallback",
-      url: "https://www.gstatic.com/generate_204",
-      interval: 300,
-    })
-  }
-
+  // 自动回退：全局兜底，排除国内节点
   proxyGroups.push({
     name: "自动回退",
     icon: `${CDN_STASH}fallback.png`,
@@ -277,13 +265,26 @@ function main(config) {
     interval: 300,
   })
 
-  // 地区分组（fallback：自动回退到可用节点，用户可手动选择起始节点）
+  // 地区分组（fallback：自动回退到可用节点）
   for (const region of availableRegions) {
     proxyGroups.push({
       name: region.name,
       icon: `${CDN_FLAGS}${region.flag}.svg`,
       "include-all": true,
       filter: region.filter,
+      type: "fallback",
+      url: "https://www.gstatic.com/generate_204",
+      interval: 300,
+    })
+  }
+
+  // 区域标签分组（fallback：自动回退可用节点）
+  for (const group of availableRegionTagGroups) {
+    proxyGroups.push({
+      name: group.name,
+      icon: `${CDN_VERGE}balance.svg`,
+      "include-all": true,
+      filter: group.filter,
       type: "fallback",
       url: "https://www.gstatic.com/generate_204",
       interval: 300,
