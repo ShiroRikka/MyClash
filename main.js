@@ -188,18 +188,6 @@ function main(config) {
     ],
   })
 
-  // 质量回退分组：ABC 联合回退链（A级→B级→C级）
-  if (qualityTierNames.length > 0) {
-    proxyGroups.push({
-      name: "质量回退",
-      icon: `${CDN_STASH}fallback.png`,
-      type: "fallback",
-      proxies: qualityTierNames,
-      url: "https://www.gstatic.com/generate_204",
-      interval: 300,
-    })
-  }
-
   // ABC 质量分级分组（fallback：自动回退到同组可用节点）
   for (const tier of ["A", "B", "C"]) {
     const nodes = qualityGroups[tier]
@@ -334,7 +322,6 @@ function main(config) {
       "节点选择",
       "漏网之鱼",
       // 质量分组
-      ...(qualityTierNames.length > 0 ? ["质量回退"] : []),
       ...qualityTierNames,
       // 倍率分组
       ...availableMultiplierTiers,
