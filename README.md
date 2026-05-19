@@ -2,7 +2,7 @@
 
 自动识别代理节点特征，生成智能代理组配置。
 
-**当前版本：v4.9**
+**当前版本：v4.10**
 
 ## 快速开始
 
@@ -198,7 +198,7 @@ node -e "const yaml=require('js-yaml'),fs=require('fs'); const c=yaml.load(fs.re
 
 ```
 Clash.Meta-Script/
-├── main.js       # 主脚本 (v4.9)
+├── main.js       # 主脚本 (v4.10)
 ├── AGENTS.md     # 开发规范与注意事项
 ├── Proxies.yaml  # 测试用代理配置
 ├── package.json  # 项目依赖
