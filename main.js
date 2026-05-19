@@ -187,6 +187,17 @@ function main(config) {
     ],
   })
 
+  // 自动回退：全局兜底，排除国内节点
+  proxyGroups.push({
+    name: "自动回退",
+    icon: `${CDN_STASH}fallback.png`,
+    "include-all": true,
+    "exclude-filter": "CN|China",
+    type: "fallback",
+    url: "https://www.gstatic.com/generate_204",
+    interval: 300,
+  })
+
   // ABC 质量分级分组（fallback：自动回退到同组可用节点）
   for (const tier of ["A", "B", "C"]) {
     const nodes = qualityGroups[tier]
@@ -213,17 +224,6 @@ function main(config) {
       interval: 300,
     })
   }
-
-  // 自动回退：全局兜底，排除国内节点
-  proxyGroups.push({
-    name: "自动回退",
-    icon: `${CDN_STASH}fallback.png`,
-    "include-all": true,
-    "exclude-filter": "CN|China",
-    type: "fallback",
-    url: "https://www.gstatic.com/generate_204",
-    interval: 300,
-  })
 
   // 主要地区分组（fallback）
   for (const region of availableRegions) {
