@@ -155,7 +155,6 @@ function main(config) {
     }))
 
   const globalStrategies = [
-    "自动选择",
     "自动回退",
   ]
 
@@ -280,16 +279,6 @@ function main(config) {
       })
     }
   }
-
-  proxyGroups.push({
-    name: "自动选择",
-    icon: `${CDN_QURE}Auto.png`,
-    "include-all": true,
-    "exclude-filter": "CN|China",
-    type: "url-test",
-    interval: 300,
-    tolerance: 50,
-  })
 
   proxyGroups.push({
     name: "广告拦截",
