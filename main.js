@@ -1,4 +1,4 @@
-// v4.9
+// v4.10
 function main(config) {
   // 参数校验：确保传入有效的配置对象
   if (!config || typeof config !== "object") {
