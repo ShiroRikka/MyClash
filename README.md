@@ -18,6 +18,30 @@
 
 [脚本地址](https://raw.githubusercontent.com/ShiroRikka/Clash.Meta-Script/main/shirorikka.js)
 
+## 脚本说明
+
+### shirorikka.js（动态代理组生成）
+
+基于节点名称特征（国旗 emoji、倍率标签、质量前缀、解锁标记等）**动态生成**代理组，适合订阅源节点命名规范的场景。
+
+### AIsouler.js（完整配置模板）
+
+源自 [AIsouler/MIHOMO_YAMLS](https://github.com/HenryChiao/MIHOMO_YAMLS)，生成**完整 Mihomo 配置**（含规则集、策略组、DNS、TUN 等），适合需要开箱即用完整配置的用户。
+
+**使用方式：**
+```js
+const config = require('./AIsouler.js').main({
+  subscriptionUrl: '你的订阅链接',
+  proxies: [] // 可选：额外添加的直连节点
+})
+```
+
+**特点：**
+- 37 个规则集（广告、GFW、CN、各大平台）
+- 34 个策略组（按地区、平台、倍率、质量分组）
+- 完整 DNS / TUN / NTP / Hosts 配置
+- 节点过滤（排除订阅信息、广告节点）
+
 ## 功能特性
 
 - 🌍 **自动地区分组** - 识别代理名中的国旗 emoji，主要地区独立分组，其余合并为「其他地区」
@@ -198,11 +222,12 @@ node -e "const yaml=require('js-yaml'),fs=require('fs'); const c=yaml.load(fs.re
 
 ```
 Clash.Meta-Script/
-├── shirorikka.js       # 主脚本 (v4.10)
-├── AGENTS.md     # 开发规范与注意事项
-├── Proxies.yaml  # 测试用代理配置
-├── package.json  # 项目依赖
-└── README.md     # 本文档
+├── shirorikka.js       # 主脚本 (v4.10) - 动态代理组生成
+├── AIsouler.js         # 配置模板 (v1.0) - 完整 Mihomo 配置生成
+├── AGENTS.md           # 开发规范与注意事项
+├── Proxies.yaml        # 测试用代理配置
+├── package.json        # 项目依赖
+└── README.md           # 本文档
 ```
 
 ## 依赖
