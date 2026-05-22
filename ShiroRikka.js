@@ -1,4 +1,4 @@
-// v4.11
+// v4.12
 function main(config) {
   // 参数校验：确保传入有效的配置对象
   if (!config || typeof config !== "object") {
@@ -24,15 +24,7 @@ function main(config) {
     "🇸🇬": { name: "新加坡", key: "sg" },
   }
 
-  // 其他地区：合并到「其他地区」分组
-  const otherRegionsMap = {
-    "🇨🇳": { name: "中国", key: "cn" },
-    "🇬🇧": { name: "英国", key: "gb" },
-    "🇩🇪": { name: "德国", key: "de" },
-    "🇫🇷": { name: "法国", key: "fr" },
-    "🇦🇺": { name: "澳大利亚", key: "au" },
-    "🇨🇦": { name: "加拿大", key: "ca" },
-  }
+  // 不需要 otherRegionsMap — 见下方排除法逻辑
 
   // ABC 质量正则：匹配 A/B/C 前缀
   const qualityRegex = /^(A|B|C)\s*-\s*/
@@ -40,15 +32,23 @@ function main(config) {
   // 倍率正则：匹配 【Nx】 标签（如【10x】、【2x】、【0.1x】）
   const multiplierRegex = /【(\d+(?:\.\d+)?)x】/
 
-  // 汇总所有代理名，一次性扫描
-  const allNames = validProxies.map(p => p.name).join(" ")
+  // 排除法检测地区：
+  // 从所有代理名扫描国旗 emoji，主要地区独立分组，其余全部归入「其他地区」
+  const allFlags = new Set()
+  for (const proxy of validProxies) {
+    const flagMatches = proxy.name.match(/[\u{1F1E6}-\u{1F1FF}]/gu)
+    if (flagMatches) {
+      flagMatches.forEach(f => allFlags.add(f))
+    }
+  }
 
   // ===== 地区检测 =====
   const foundMainFlags = new Set(
-    Object.keys(mainRegionsMap).filter(flag => allNames.includes(flag))
+    Object.keys(mainRegionsMap).filter(flag => allFlags.has(flag))
   )
+  // 其他地区：所有出现但不是主要地区的国旗自动归入（排除法）
   const foundOtherFlags = new Set(
-    Object.keys(otherRegionsMap).filter(flag => allNames.includes(flag))
+    [...allFlags].filter(flag => !mainRegionsMap[flag])
   )
 
   const availableRegions = [...foundMainFlags].map((flag) => ({

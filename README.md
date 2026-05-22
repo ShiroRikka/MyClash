@@ -9,18 +9,18 @@
 ### 在 Clash Verge 中使用
 
 1. 打开 Clash Verge → 设置 → 拓展脚本
-2. 添加新脚本，粘贴 `shirorikka.js` 的代码
+2. 添加新脚本，粘贴 `ShiroRikka.js` 的代码
 3. 重启 Clash
 
 ### 在其他客户端中使用
 
 将脚本 URL 添加到配置文件：
 
-[脚本地址](https://raw.githubusercontent.com/ShiroRikka/Clash.Meta-Script/main/shirorikka.js)
+[脚本地址](https://raw.githubusercontent.com/ShiroRikka/Clash.Meta-Script/main/ShiroRikka.js)
 
 ## 脚本说明
 
-### shirorikka.js（动态代理组生成）
+### ShiroRikka.js（动态代理组生成）
 
 基于节点名称特征（国旗 emoji、倍率标签、质量前缀、解锁标记等）**动态生成**代理组，适合订阅源节点命名规范的场景。
 
@@ -215,14 +215,14 @@ proxies:
 脚本运行后会输出到 `processed_config.yaml`：
 
 ```bash
-node -e "const yaml=require('js-yaml'),fs=require('fs'); const c=yaml.load(fs.readFileSync('Proxies.yaml','utf8')); console.log(yaml.dump(require('./shirorikka.js').main(c)))" > processed_config.yaml
+node -e "const yaml=require('js-yaml'),fs=require('fs'); const c=yaml.load(fs.readFileSync('Proxies.yaml','utf8')); console.log(yaml.dump(require('./ShiroRikka.js').main(c)))" > processed_config.yaml
 ```
 
 ## 项目结构
 
 ```
 Clash.Meta-Script/
-├── shirorikka.js       # 主脚本 (v4.10) - 动态代理组生成
+├── ShiroRikka.js       # 主脚本 (v4.10) - 动态代理组生成
 ├── AIsouler.js         # 配置模板 (v1.0) - 完整 Mihomo 配置生成
 ├── AGENTS.md           # 开发规范与注意事项
 ├── Proxies.yaml        # 测试用代理配置
