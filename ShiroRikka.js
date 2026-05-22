@@ -1,4 +1,4 @@
-// v4.10
+// v4.11
 function main(config) {
   // 参数校验：确保传入有效的配置对象
   if (!config || typeof config !== "object") {
@@ -330,6 +330,49 @@ function main(config) {
   })
 
   config["proxy-groups"] = proxyGroups
+
+  // ===== DNS 锚点 =====
+  const chinaDNS = [
+    "https://dns.alidns.com/dns-query#DIRECT",
+    "https://doh.pub/dns-query#DIRECT",
+  ]
+  const foreignDNS = [
+    "https://dns.cloudflare.com/dns-query#节点选择",
+    "https://dns.google/dns-query#节点选择",
+  ]
+
+  // ===== DNS 配置 =====
+  config.dns = {
+    enable: true,
+    ipv6: true,
+    listen: ":1053",
+    "cache-algorithm": "arc",
+    "use-hosts": true,
+    "use-system-hosts": true,
+    "enhanced-mode": "fake-ip",
+    "fake-ip-range": "198.18.0.1/16",
+    "fake-ip-range-v6": "fc00::/18",
+    "fake-ip-filter": ["rule-set:private"],
+    "proxy-server-nameserver": chinaDNS,
+    "default-nameserver": ["223.5.5.5", "119.29.29.29"],
+    nameserver: foreignDNS,
+    "nameserver-policy": {
+      "*": "system",
+      "rule-set:direct": chinaDNS,
+    },
+    "direct-nameserver": ["system", "223.5.5.5", "119.29.29.29"],
+  }
+
+  // ===== Hosts =====
+  config.hosts = {
+    "dns.alidns.com": ["223.5.5.5", "223.6.6.6"],
+    "doh.pub": ["1.12.12.12", "120.53.53.53"],
+    "dns.cloudflare.com": ["1.1.1.1", "1.0.0.1"],
+    "dns.google": ["8.8.8.8", "8.8.4.4"],
+    "services.googleapis.cn": ["services.googleapis.com"],
+    "+.mcdn.bilivideo.com": ["0.0.0.0"],
+    "+.mcdn.bilivideo.cn": ["0.0.0.0"],
+  }
 
   const ruleProviderBase = { type: "http", interval: 86400 }
   const ruleProvidersData = [
