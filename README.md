@@ -9,14 +9,14 @@
 ### 在 Clash Verge 中使用
 
 1. 打开 Clash Verge → 设置 → 拓展脚本
-2. 添加新脚本，粘贴 `main.js` 的代码
+2. 添加新脚本，粘贴 `shirorikka.js` 的代码
 3. 重启 Clash
 
 ### 在其他客户端中使用
 
 将脚本 URL 添加到配置文件：
 
-[脚本地址](https://raw.githubusercontent.com/ShiroRikka/Clash.Meta-Script/main/main.js)
+[脚本地址](https://raw.githubusercontent.com/ShiroRikka/Clash.Meta-Script/main/shirorikka.js)
 
 ## 功能特性
 
@@ -191,14 +191,14 @@ proxies:
 脚本运行后会输出到 `processed_config.yaml`：
 
 ```bash
-node -e "const yaml=require('js-yaml'),fs=require('fs'); const c=yaml.load(fs.readFileSync('Proxies.yaml','utf8')); console.log(yaml.dump(require('./main.js').main(c)))" > processed_config.yaml
+node -e "const yaml=require('js-yaml'),fs=require('fs'); const c=yaml.load(fs.readFileSync('Proxies.yaml','utf8')); console.log(yaml.dump(require('./shirorikka.js').main(c)))" > processed_config.yaml
 ```
 
 ## 项目结构
 
 ```
 Clash.Meta-Script/
-├── main.js       # 主脚本 (v4.10)
+├── shirorikka.js       # 主脚本 (v4.10)
 ├── AGENTS.md     # 开发规范与注意事项
 ├── Proxies.yaml  # 测试用代理配置
 ├── package.json  # 项目依赖

@@ -13,7 +13,7 @@ npm install
 测试文件命名 `Proxies.yaml`，包含 `proxies` 数组：
 
 ```bash
-node -e "const yaml=require('js-yaml'),fs=require('fs'); const c=yaml.load(fs.readFileSync('Proxies.yaml','utf8')); console.log(yaml.dump(require('./main.js').main(c)))" > processed_config.yaml
+node -e "const yaml=require('js-yaml'),fs=require('fs'); const c=yaml.load(fs.readFileSync('Proxies.yaml','utf8')); console.log(yaml.dump(require('./shirorikka.js').main(c)))" > processed_config.yaml
 ```
 
 注意：脚本无 `module.exports`，某些客户端不支持。如需测试，需临时添加：
