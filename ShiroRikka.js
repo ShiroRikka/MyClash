@@ -36,7 +36,7 @@ function main(config) {
   // 从所有代理名扫描国旗 emoji，主要地区独立分组，其余全部归入「其他地区」
   const allFlags = new Set()
   for (const proxy of validProxies) {
-    const flagMatches = proxy.name.match(/[\u{1F1E6}-\u{1F1FF}]/gu)
+    const flagMatches = proxy.name.match(/[\u{1F1E6}-\u{1F1FF}][\u{1F1E6}-\u{1F1FF}]/gu)
     if (flagMatches) {
       flagMatches.forEach(f => allFlags.add(f))
     }
