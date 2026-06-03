@@ -1,4 +1,4 @@
-// v4.12
+// v4.12-modified — 按协议分组（S级/A级/兜底），自动回退策略参考 AIsouler/MyClash
 function main(config) {
   // 参数校验：确保传入有效的配置对象
   if (!config || typeof config !== "object") {
@@ -15,271 +15,157 @@ function main(config) {
   const CDN_VERGE = `${CDN}clash-verge-rev/clash-verge-rev.github.io@main/docs/assets/icons/`
   const CDN_STASH = `${CDN}shindgewongxj/WHATSINStash@master/icon/`
 
-  // 主要地区：每个地区独立分组
-  const mainRegionsMap = {
-    "🇭🇰": { name: "中国-香港", key: "hk" },
-    "🇹🇼": { name: "中国-台湾", key: "tw" },
-    "🇯🇵": { name: "日本", key: "jp" },
-    "🇺🇸": { name: "美国", key: "us" },
-    "🇸🇬": { name: "新加坡", key: "sg" },
+  // ===== 按协议类型分类节点 =====
+  const protocolBins = {
+    hysteria2: [],
+    tuic: [],
+    trojan: [],
+    vless: [],
+    other: [], // 兜底：其余所有协议（vmess, shadowsocks, hysteria, socks5, http 等）
   }
 
-  // 不需要 otherRegionsMap — 见下方排除法逻辑
-
-  // ABC 质量正则：匹配 A/B/C 前缀
-  const qualityRegex = /^(A|B|C)\s*-\s*/
-
-  // 倍率正则：匹配 【Nx】 标签（如【10x】、【2x】、【0.1x】）
-  const multiplierRegex = /【(\d+(?:\.\d+)?)x】/
-
-  // 排除法检测地区：
-  // 从所有代理名扫描国旗 emoji，主要地区独立分组，其余全部归入「其他地区」
-  const allFlags = new Set()
   for (const proxy of validProxies) {
-    const flagMatches = proxy.name.match(/[\u{1F1E6}-\u{1F1FF}][\u{1F1E6}-\u{1F1FF}]/gu)
-    if (flagMatches) {
-      flagMatches.forEach(f => allFlags.add(f))
+    const type = (proxy.type || "").toLowerCase()
+    switch (type) {
+      case "hysteria2":
+      case "hy2":
+        protocolBins.hysteria2.push(proxy.name)
+        break
+      case "tuic":
+        protocolBins.tuic.push(proxy.name)
+        break
+      case "trojan":
+        protocolBins.trojan.push(proxy.name)
+        break
+      case "vless":
+        protocolBins.vless.push(proxy.name)
+        break
+      default:
+        // Shadowsocks, VMess, Hysteria, Socks5, HTTP, Direct 等均归入兜底
+        protocolBins.other.push(proxy.name)
+        break
     }
   }
 
-  // ===== 地区检测 =====
-  const foundMainFlags = new Set(
-    Object.keys(mainRegionsMap).filter(flag => allFlags.has(flag))
-  )
-  // 其他地区：所有出现但不是主要地区的国旗自动归入（排除法）
-  const foundOtherFlags = new Set(
-    [...allFlags].filter(flag => !mainRegionsMap[flag])
-  )
+  // ===== 构建策略组 =====
 
-  const availableRegions = [...foundMainFlags].map((flag) => ({
-    name: `${flag}${mainRegionsMap[flag].name}`,
-    flag: mainRegionsMap[flag].key,
-    filter: flag,
-  }))
-
-  availableRegions.sort((a, b) => a.name.localeCompare(b.name, "zh"))
-
-  const hasOtherRegions = foundOtherFlags.size > 0
-  // 其他地区合并筛选正则
-  const otherRegionFilter = hasOtherRegions
-    ? [...foundOtherFlags].join("|")
-    : null
-
-  // ===== 倍率分组（按实际倍率值分组，步进 0.1）=====
-  const multiplierValues = new Set()
-  for (const proxy of validProxies) {
-    const match = proxy.name.match(multiplierRegex)
-    if (match) {
-      multiplierValues.add(parseFloat(match[1]))
-    }
+  // fallback 自动回退策略（参考 AIsouler/MyClash 的 url-test 策略参数）
+  const fallbackBaseOption = {
+    type: "fallback",
+    url: "https://www.gstatic.com/generate_204",
+    interval: 600,
+    timeout: 3000,
+    lazy: true,
+    "max-failed-times": 3,
   }
-
-  const sortedMultiplierValues = [...multiplierValues].sort((a, b) => b - a)
-  const multiplierGroups = {}
-  for (const value of sortedMultiplierValues) {
-    const key = `${value}x`
-    multiplierGroups[key] = validProxies
-      .filter(p => {
-        const m = p.name.match(multiplierRegex)
-        return m && Math.abs(parseFloat(m[1]) - value) < 0.01
-      })
-      .map(p => p.name)
-  }
-
-  const availableMultiplierTiers = Object.keys(multiplierGroups)
-
-  // ===== ABC 质量分组分类 =====
-  const qualityGroups = { A: [], B: [], C: [] }
-  for (const proxy of validProxies) {
-    const match = proxy.name.match(qualityRegex)
-    if (match) {
-      qualityGroups[match[1]].push(proxy.name)
-    }
-  }
-
-  const qualityTierNames = Object.entries(qualityGroups)
-    .filter(([_, nodes]) => nodes.length > 0)
-    .map(([tier, _]) => `${tier}级节点`)
-
-  // ===== 带宽分组 =====
-  const speedRegex = /(\d+(?:\.\d+)?)\s*MB\/s/i
-  const bandwidthGroups = {}
-  for (const proxy of validProxies) {
-    const match = proxy.name.match(speedRegex)
-    if (match) {
-      const speed = parseFloat(match[1])
-      let tier
-      if (speed >= 6) {
-        tier = "6+MB/s"
-      } else {
-        const floorSpeed = Math.floor(speed)
-        tier = floorSpeed < 1 ? "<1MB/s" : `${floorSpeed}MB/s`
-      }
-      if (!bandwidthGroups[tier]) {
-        bandwidthGroups[tier] = []
-      }
-      bandwidthGroups[tier].push(proxy.name)
-    }
-  }
-
-  const availableTiers = Object.keys(bandwidthGroups).sort((a, b) => {
-    const isAHigh = a.startsWith("6+")
-    const isBHigh = b.startsWith("6+")
-    if (isAHigh) return -1
-    if (isBHigh) return 1
-    const numA = parseInt(a)
-    const numB = parseInt(b)
-    return numB - numA
-  })
-
-  // ===== 平台解锁分组配置 =====
-  const unlockMap = {
-    "GPT": { name: "GPT解锁", filter: "GPT", icon: "ChatGPT.png" },
-    "NF": { name: "Netflix解锁", filter: "NF", icon: "Netflix.png" },
-    "GM": { name: "Gemini解锁", filter: "GM", icon: "https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@latest/icons/gemini.svg" },
-    "D+": { name: "Disney+解锁", filter: "D\\+", icon: "StreamingCN.png" },
-    "YT": { name: "YouTube解锁", filter: "YT-", icon: "YouTube.png" },
-    "CL": { name: "Claude解锁", filter: "CL-", icon: "AI.png" },
-    "SP": { name: "Spotify解锁", filter: "SP-", icon: "Spotify.png" },
-  }
-
-  const availableUnlockGroups = Object.entries(unlockMap)
-    .filter(([key, val]) => {
-      const regex = new RegExp(val.filter)
-      return validProxies.some(p => regex.test(p.name))
-    })
-    .map(([key, val]) => ({
-      name: val.name,
-      filter: val.filter,
-      icon: val.icon.startsWith("http") ? val.icon : `${CDN_QURE}${val.icon}`,
-    }))
-
-  const globalStrategies = [
-    "自动回退",
-  ]
-
-  const regionNames = availableRegions.map((r) => r.name)
-  const unlockGroupNames = availableUnlockGroups.map((g) => g.name)
 
   const proxyGroups = []
 
-  // 节点选择：按优先级排列（质量 > 倍率 > 地区 > 其他地区 > 解锁 > 带宽 > 全局策略）
+  // ========== 协议级分组（自动回退 fallback） ==========
+
+  // Hysteria2 分组
+  if (protocolBins.hysteria2.length > 0) {
+    proxyGroups.push({
+      name: "Hysteria2",
+      icon: `${CDN_QURE}Hysteria2.png`,
+      ...fallbackBaseOption,
+      proxies: protocolBins.hysteria2,
+    })
+  }
+
+  // TUIC 分组
+  if (protocolBins.tuic.length > 0) {
+    proxyGroups.push({
+      name: "TUIC",
+      icon: `${CDN_QURE}TUIC.png`,
+      ...fallbackBaseOption,
+      proxies: protocolBins.tuic,
+    })
+  }
+
+  // Trojan 分组
+  if (protocolBins.trojan.length > 0) {
+    proxyGroups.push({
+      name: "Trojan",
+      icon: `${CDN_QURE}Trojan.png`,
+      ...fallbackBaseOption,
+      proxies: protocolBins.trojan,
+    })
+  }
+
+  // VLESS 分组
+  if (protocolBins.vless.length > 0) {
+    proxyGroups.push({
+      name: "VLESS",
+      icon: `${CDN_QURE}VLESS.png`,
+      ...fallbackBaseOption,
+      proxies: protocolBins.vless,
+    })
+  }
+
+  // AnyTLS 分组（兜底）—— 包含所有剩余协议节点
+  if (protocolBins.other.length > 0) {
+    proxyGroups.push({
+      name: "AnyTLS",
+      icon: `${CDN_VERGE}globe.svg`,
+      ...fallbackBaseOption,
+      proxies: protocolBins.other,
+    })
+  }
+
+  // ========== 等级选择分组（手动 select） ==========
+
+  // S 级：包含 Hysteria2 + TUIC
+  const sChildren = ["Hysteria2", "TUIC"].filter(
+    name => proxyGroups.some(g => g.name === name)
+  )
+  if (sChildren.length > 0) {
+    proxyGroups.push({
+      name: "S级",
+      icon: `${CDN_STASH}ssr.png`,
+      type: "select",
+      proxies: [...sChildren, "DIRECT"],
+    })
+  }
+
+  // A 级：包含 Trojan + VLESS
+  const aChildren = ["Trojan", "VLESS"].filter(
+    name => proxyGroups.some(g => g.name === name)
+  )
+  if (aChildren.length > 0) {
+    proxyGroups.push({
+      name: "A级",
+      icon: `${CDN_STASH}ssr.png`,
+      type: "select",
+      proxies: [...aChildren, "DIRECT"],
+    })
+  }
+
+  // 兜底：包含 AnyTLS
+  const hasAnyTLS = proxyGroups.some(g => g.name === "AnyTLS")
+  if (hasAnyTLS) {
+    proxyGroups.push({
+      name: "兜底",
+      icon: `${CDN_QURE}Fallback.png`,
+      type: "select",
+      proxies: ["AnyTLS", "DIRECT"],
+    })
+  }
+
+  // ========== 顶层选择器 ==========
+
+  // 节点选择：将所有等级组纳入
+  const tierGroups = ["S级", "A级", "兜底"].filter(
+    name => proxyGroups.some(g => g.name === name)
+  )
   proxyGroups.push({
     name: "节点选择",
     icon: `${CDN_QURE}Proxy.png`,
     type: "select",
-    proxies: [
-      // 质量分组（最高优先级）
-      ...qualityTierNames,
-      // 倍率分组
-      ...availableMultiplierTiers,
-      // 主要地区分组
-      ...regionNames,
-      // 其他地区分组
-      ...(hasOtherRegions ? ["其他地区"] : []),
-      // 解锁分组
-      ...unlockGroupNames,
-      // 带宽分组
-      ...availableTiers,
-      // 全局策略
-      ...globalStrategies,
-      "DIRECT",
-    ],
+    proxies: [...tierGroups, "DIRECT"],
   })
 
-  // 自动回退：全局兜底，排除国内节点
-  proxyGroups.push({
-    name: "自动回退",
-    icon: `${CDN_STASH}fallback.png`,
-    "include-all": true,
-    "exclude-filter": "CN|China",
-    type: "fallback",
-    url: "https://www.gstatic.com/generate_204",
-    interval: 300,
-  })
-
-  // ABC 质量分级分组（fallback：自动回退到同组可用节点）
-  for (const tier of ["A", "B", "C"]) {
-    const nodes = qualityGroups[tier]
-    if (nodes.length > 0) {
-      proxyGroups.push({
-        name: `${tier}级节点`,
-        icon: `${CDN_VERGE}balance.svg`,
-        type: "fallback",
-        proxies: nodes,
-        url: "https://www.gstatic.com/generate_204",
-        interval: 300,
-      })
-    }
-  }
-
-  // 倍率分组（fallback：按实际倍率值分组）
-  for (const tier of availableMultiplierTiers) {
-    proxyGroups.push({
-      name: tier,
-      icon: `${CDN_VERGE}balance.svg`,
-      type: "fallback",
-      proxies: multiplierGroups[tier],
-      url: "https://www.gstatic.com/generate_204",
-      interval: 300,
-    })
-  }
-
-  // 主要地区分组（fallback）
-  for (const region of availableRegions) {
-    proxyGroups.push({
-      name: region.name,
-      icon: `${CDN_FLAGS}${region.flag}.svg`,
-      "include-all": true,
-      filter: region.filter,
-      type: "fallback",
-      url: "https://www.gstatic.com/generate_204",
-      interval: 300,
-    })
-  }
-
-  // 其他地区分组（fallback）
-  if (hasOtherRegions) {
-    proxyGroups.push({
-      name: "其他地区",
-      icon: `${CDN_VERGE}globe.svg`,
-      "include-all": true,
-      filter: otherRegionFilter,
-      type: "fallback",
-      url: "https://www.gstatic.com/generate_204",
-      interval: 300,
-    })
-  }
-
-  // 平台解锁分组（fallback）
-  for (const group of availableUnlockGroups) {
-    proxyGroups.push({
-      name: group.name,
-      icon: group.icon,
-      "include-all": true,
-      filter: group.filter,
-      type: "fallback",
-      url: "https://www.gstatic.com/generate_204",
-      interval: 300,
-    })
-  }
-
-  // 带宽分组（load-balance）
-  for (const tier of availableTiers) {
-    const proxies = bandwidthGroups[tier]
-    if (proxies.length > 0) {
-      proxyGroups.push({
-        name: tier,
-        icon: `${CDN_VERGE}balance.svg`,
-        type: "load-balance",
-        proxies: proxies,
-        url: "https://www.gstatic.com/generate_204",
-        interval: 300,
-        strategy: "round-robin",
-      })
-    }
-  }
-
+  // 广告拦截
   proxyGroups.push({
     name: "广告拦截",
     icon: `${CDN_QURE}AdBlack.png`,
@@ -287,6 +173,7 @@ function main(config) {
     proxies: ["REJECT", "DIRECT"],
   })
 
+  // 应用净化
   proxyGroups.push({
     name: "应用净化",
     icon: `${CDN_QURE}Hijacking.png`,
@@ -294,7 +181,7 @@ function main(config) {
     proxies: ["REJECT", "DIRECT"],
   })
 
-  // 漏网之鱼：未匹配规则的流量，默认走代理，用户可切换到直连
+  // 漏网之鱼：未匹配规则的流量
   proxyGroups.push({
     name: "漏网之鱼",
     icon: `${CDN_QURE}Final.png`,
@@ -302,6 +189,8 @@ function main(config) {
     proxies: ["节点选择", "DIRECT"],
   })
 
+  // GLOBAL：顶层包括所有
+  const allGroupNames = proxyGroups.map(g => g.name)
   proxyGroups.push({
     name: "GLOBAL",
     icon: `${CDN_QURE}Global.png`,
@@ -310,20 +199,12 @@ function main(config) {
     proxies: [
       "节点选择",
       "漏网之鱼",
-      // 质量分组
-      ...qualityTierNames,
-      // 倍率分组
-      ...availableMultiplierTiers,
-      // 全局策略
-      ...globalStrategies,
-      // 主要地区分组
-      ...regionNames,
-      // 其他地区分组
-      ...(hasOtherRegions ? ["其他地区"] : []),
-      // 解锁分组
-      ...unlockGroupNames,
-      // 带宽分组
-      ...availableTiers,
+      ...tierGroups,
+      ...(proxyGroups.some(g => g.name === "Hysteria2") ? ["Hysteria2"] : []),
+      ...(proxyGroups.some(g => g.name === "TUIC") ? ["TUIC"] : []),
+      ...(proxyGroups.some(g => g.name === "Trojan") ? ["Trojan"] : []),
+      ...(proxyGroups.some(g => g.name === "VLESS") ? ["VLESS"] : []),
+      ...(hasAnyTLS ? ["AnyTLS"] : []),
       "广告拦截",
       "应用净化",
     ],
