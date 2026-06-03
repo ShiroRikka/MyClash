@@ -48,16 +48,6 @@ function main(config) {
 
   // ===== 策略组基础配置 =====
 
-  // 自动回退（fallback, visible）
-  const fallbackBaseOption = {
-    type: "fallback",
-    url: "https://www.gstatic.com/generate_204",
-    interval: 600,
-    timeout: 3000,
-    lazy: true,
-    "max-failed-times": 3,
-  }
-
   // 自动选择（url-test, hidden）
   const urlTestBaseOption = {
     type: "url-test",
@@ -72,14 +62,8 @@ function main(config) {
 
   // ===== 构建协议分组 =====
   function createProtocolGroup(name, icon, proxies) {
-    const fallbackName = `${name}-自动回退`
     const autoName = `${name}-自动选择`
     return [
-      {
-        name: fallbackName,
-        ...fallbackBaseOption,
-        proxies,
-      },
       {
         name: autoName,
         ...urlTestBaseOption,
@@ -90,7 +74,7 @@ function main(config) {
         name,
         icon,
         type: "select",
-        proxies: [fallbackName, autoName],
+        proxies: [...proxies, autoName],
       },
     ]
   }
@@ -134,14 +118,6 @@ function main(config) {
       icon: `${CDN_QURE}Auto.png`,
       proxies: [...mainGroupNames],
     })
-    // 全局自动回退（url-test, visible）— 在所有协议组间自动切换
-    proxyGroups.push({
-      name: "自动回退",
-      ...urlTestBaseOption,
-      icon: `${CDN_QURE}Auto.png`,
-      hidden: false,
-      proxies: [...mainGroupNames],
-    })
   }
 
   // 节点选择
@@ -150,7 +126,7 @@ function main(config) {
     icon: `${CDN_QURE}Proxy.png`,
     type: "select",
     proxies: [
-      ...(mainGroupNames.length > 0 ? ["自动选择", "自动回退"] : []),
+      ...(mainGroupNames.length > 0 ? ["自动选择"] : []),
       ...mainGroupNames,
       "DIRECT",
     ],
@@ -190,16 +166,11 @@ function main(config) {
     ],
   })
 
-  // 将「节点选择」移到最前面，「自动回退」紧跟其后
+  // 将「节点选择」移到最前面
   const ngIdx = proxyGroups.findIndex(g => g.name === "节点选择")
   if (ngIdx > 0) {
     const [nodeSelect] = proxyGroups.splice(ngIdx, 1)
     proxyGroups.unshift(nodeSelect)
-  }
-  const fbIdx = proxyGroups.findIndex(g => g.name === "自动回退")
-  if (fbIdx > 1) {
-    const [fb] = proxyGroups.splice(fbIdx, 1)
-    proxyGroups.splice(1, 0, fb)
   }
 
   config["proxy-groups"] = proxyGroups
