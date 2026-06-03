@@ -1,11 +1,9 @@
-// v4.14 — 协议级 select 分组，去掉 S/A/兜底 层级，协议组直挂 节点选择
+// v4.15 — 协议组 select 只含自动回退/自动选择，不列节点
 function main(config) {
-  // 参数校验
   if (!config || typeof config !== "object") {
     throw new TypeError("config 必须是对象")
   }
   const allProxies = Array.isArray(config.proxies) ? config.proxies : []
-
   const validProxies = allProxies.filter(p => p && typeof p.name === "string")
 
   const CDN = "https://cdn.jsdelivr.net/gh/"
@@ -47,7 +45,7 @@ function main(config) {
 
   // ===== 策略组基础配置 =====
 
-  // 自动回退（fallback, hidden）— 稳定性优先，选第一个可用
+  // 自动回退（fallback）— 稳定性优先，选第一个可用（可见，用户可切换过来）
   const fallbackBaseOption = {
     type: "fallback",
     url: "https://www.gstatic.com/generate_204",
@@ -55,7 +53,6 @@ function main(config) {
     timeout: 3000,
     lazy: true,
     "max-failed-times": 3,
-    hidden: true,
   }
 
   // 自动选择（url-test, hidden）— 速度优先，选延迟最低
@@ -71,10 +68,10 @@ function main(config) {
   }
 
   // ===== 构建协议分组 =====
-  // 每个协议生成三个分组（参考 AIsouler/MyClash 的 createRegionGroup 模式）：
-  //   1. {name}-自动回退  (fallback, hidden)
-  //   2. {name}-自动选择  (url-test, hidden)
-  //   3. {name}            (select) — 可直接手选节点，也可切换到自动策略
+  // 每个协议生成三个分组：
+  //   1. {name}-自动回退  (fallback)      — 选第一个可用节点
+  //   2. {name}-自动选择  (url-test, hidden) — 选延迟最低节点
+  //   3. {name}            (select)       — 在以上两个策略之间切换
   function createProtocolGroup(name, icon, proxies) {
     const fallbackName = `${name}-自动回退`
     const autoName = `${name}-自动选择`
@@ -94,7 +91,7 @@ function main(config) {
         name,
         icon,
         type: "select",
-        proxies: [...proxies, fallbackName, autoName],
+        proxies: [fallbackName, autoName],
       },
     ]
   }
