@@ -1,56 +1,68 @@
 # Mihomo (Clash Meta) 代理组生成脚本
 
-按代理协议类型自动分类，生成简洁的 S级 / A级 / 兜底 三级代理组配置。
+按代理协议类型自动分类，生成协议级 select 分组（含自动回退/自动选择）。  
+**当前版本：v4.15**
 
-**当前版本：v4.13**
+---
 
 ## 快速开始
 
-### 在 Clash Verge 中使用
+### 在 Clash Verge / Mihomo Party 中使用
 
-1. 打开 Clash Verge → 设置 → 拓展脚本
-2. 添加新脚本，粘贴 `ShiroRikka.js` 的代码
-3. 重启 Clash
+1. 打开设置 → **拓展脚本** / **Script**
+2. 粘贴 `ShiroRikka.js` 的完整代码
+3. 重启应用，拉取覆写生效
 
 ### 在其他客户端中使用
 
-将脚本 URL 添加到配置文件：
+将脚本 URL 添加到 `mihomo.yaml`：
 
-[脚本地址](https://raw.githubusercontent.com/ShiroRikka/MyClash/main/ShiroRikka.js)
+```yaml
+script:
+  code:
+    !import https://raw.githubusercontent.com/ShiroRikka/MyClash/main/ShiroRikka.js
+```
+
+---
 
 ## 分组架构
 
 ```
-GLOBAL (select)
- └─ 节点选择 (select)
-     ├─ S级 (select)               ← 高性能协议
-     │   ├─ Hysteria2 (fallback)    ← Hysteria2 / hy2 节点，自动回退
-     │   └─ TUIC (fallback)         ← TUIC 节点，自动回退
-     ├─ A级 (select)               ← 稳定协议
-     │   ├─ Trojan (fallback)       ← Trojan 节点，自动回退
-     │   └─ VLESS (fallback)        ← VLESS 节点，自动回退
-     └─ 兜底 (select)              ← 其余协议
-         └─ AnyTLS (fallback)       ← VMess / Shadowsocks / Hysteria 等，自动回退
- └─ 漏网之鱼 (select) → 节点选择 / DIRECT
- └─ 广告拦截 / 应用净化 (select) → REJECT / DIRECT
+GLOBAL (select, include-all)
+│
+├─ 节点选择 (select)                  ← 主入口，含 DIRECT
+│   ├─ Hysteria2 (select)
+│   │   ├─ ─ 节点列表                  ← 可手选单个节点
+│   │   ├─ Hysteria2-自动回退 (fallback, hidden)  ← 自动选最优
+│   │   └─ Hysteria2-自动选择 (url-test, hidden)  ← 选最低延迟
+│   ├─ TUIC (select)                 ← 同上三层结构
+│   ├─ Trojan (select)               ← 同上
+│   ├─ VLESS (select)                ← 同上
+│   ├─ AnyTLS (select)               ← 兜底协议组
+│   └─ DIRECT
+│
+├─ 漏网之鱼 (select)                  → 节点选择 / DIRECT
+├─ 广告拦截 (select)                  → REJECT / DIRECT
+└─ 应用净化 (select)                  → REJECT / DIRECT
 ```
 
 ### 分组说明
 
 | 分组 | 类型 | 说明 |
 |------|------|------|
-| **S级** | `select` | 包含 Hysteria2 和 TUIC 子分组，用户手动切换或选择 AUTO |
-| **A级** | `select` | 包含 Trojan 和 VLESS 子分组，用户手动切换或选择 AUTO |
-| **兜底** | `select` | 包含 AnyTLS 子分组（其余协议），用户手动切换或选择 AUTO |
-| **Hysteria2 / TUIC / Trojan / VLESS / AnyTLS** | `fallback` | 自动测速，选用延迟最低的可用节点，故障自动切换 |
+| **节点选择** | `select` | 主入口，列出所有协议组 + DIRECT，可手动切换或设为自动 |
+| **Hysteria2 / TUIC / Trojan / VLESS / AnyTLS** | `select` | 协议组，展开可见节点列表 + 两个隐藏自动策略 |
+| **{name}-自动回退** | `fallback` (hidden) | 自动测速，选第一个可用节点，故障自动切换 |
+| **{name}-自动选择** | `url-test` (hidden) | 自动测速，选延迟最低节点（容差 100ms） |
 | **广告拦截 / 应用净化** | `select` | 选择 REJECT 拦截或 DIRECT 放行 |
 | **漏网之鱼** | `select` | 默认走节点选择，可手动切直连 |
 | **GLOBAL** | `select` | 顶层主控，包含所有分组 |
 
-### 自动回退策略
+### 自动策略参数
 
-所有协议子分组均使用 Mihomo 的 `fallback` 类型，参数参考 [AIsouler/MyClash](https://github.com/AIsouler/MyClash)：
+所有协议组均生成两个隐藏的自动策略组：
 
+**自动回退 (fallback)：**
 ```yaml
 type: fallback
 url: https://www.gstatic.com/generate_204
@@ -58,58 +70,141 @@ interval: 600       # 每 10 分钟测速一次
 timeout: 3000       # 单次测速 3 秒超时
 lazy: true          # 有流量时触发测速
 max-failed-times: 3 # 连续失败 3 次切换
+hidden: true
 ```
+
+**自动选择 (url-test)：**
+```yaml
+type: url-test
+url: https://www.gstatic.com/generate_204
+interval: 600
+timeout: 3000
+tolerance: 100      # 延迟容差 100ms
+lazy: true
+max-failed-times: 3
+hidden: true
+```
+
+---
 
 ## 分类规则
 
 脚本读取每个代理节点的 `type` 字段，自动归类：
 
-| 代理类型 `proxy.type` | 归入分组 | 所在等级 |
-|----------------------|---------|---------|
-| `hysteria2` / `hy2` | Hysteria2 | **S级** |
-| `tuic` | TUIC | **S级** |
-| `trojan` | Trojan | **A级** |
-| `vless` | VLESS | **A级** |
-| 其余（vmess / shadowsocks / hysteria / socks5 / http / direct 等） | AnyTLS | **兜底** |
+| 代理类型 `proxy.type` | 归入分组 | 图标 |
+|----------------------|---------|------|
+| `hysteria2` / `hy2` | Hysteria2 | Qure Hysteria2.png |
+| `tuic` | TUIC | Qure TUIC.png |
+| `trojan` | Trojan | Qure Trojan.png |
+| `vless` | VLESS | Qure VLESS.png |
+| 其余（vmess / shadowsocks / hysteria / socks5 / http 等） | AnyTLS | Verge globe.svg |
 
-> 不需要在节点名中添加特殊标记，脚本直接识别协议类型，自动搞定分类。
+> 不需要在节点名中添加特殊标记，脚本直接从 `proxy.type` 识别协议类型。
 
 ### 空分组容错
 
-如果某个协议完全没有对应节点，该分组不会创建，上层选择器也会自动调整。例如无 Hysteria2 和 TUIC 节点时，S级及其子分组不会出现在配置中。
+如果某个协议没有节点，该协议组及其隐藏策略组不会创建，`节点选择` 的选项列表也会自动调整。
 
-## 规则说明
+---
 
-脚本自动生成 Loyalsoldier 规则集订阅，并应用以下路由规则：
+## 路由规则
 
+脚本仅使用 **MetaCubeX 官方 `.mrs`** 规则源：
+
+```yaml
+# 广告拦截（最优先）
+RULE-SET,category-ads-all,REJECT
+
+# 内网域名直连
+RULE-SET,private,DIRECT
+
+# 国内域名直连
+RULE-SET,cn,DIRECT
+
+# 被墙域名走代理
+RULE-SET,gfw,节点选择
+
+# Google 走代理
+RULE-SET,google,节点选择
+
+# Telegram 走代理
+RULE-SET,telegram,节点选择
+
+# IP 规则
+RULE-SET,geoip-private,DIRECT,no-resolve
+RULE-SET,geoip-cn,DIRECT,no-resolve
+RULE-SET,geoip-telegram,节点选择,no-resolve
+
+# 兜底 → 节点选择（用户可在面板切换走代理或直连）
+MATCH,节点选择
 ```
-applications → DIRECT
-private → DIRECT
-reject → REJECT
-icloud → DIRECT
-apple → DIRECT
-google → 节点选择
-proxy → 节点选择
-direct → DIRECT
-lancidr → DIRECT
-cncidr → DIRECT
-telegramcidr → 节点选择
-GEOIP,LAN → DIRECT
-GEOIP,CN → DIRECT
-MATCH → 漏网之鱼
-```
 
-> 最后一跳 `MATCH` 路由到 **漏网之鱼**，用户可在 GUI 中切换走代理或直连。
+### 规则源说明
+
+所有规则源来自 [MetaCubeX/meta-rules-dat](https://github.com/MetaCubeX/meta-rules-dat)，使用 `.mrs` 编译格式：
+
+| 规则集 | 类型 | 用途 |
+|--------|------|------|
+| `category-ads-all` | geosite | 广告/追踪域名 |
+| `private` | geosite | 内网/私有域名 |
+| `cn` | geosite | 国内域名 |
+| `gfw` | geosite | 被墙域名 |
+| `google` | geosite | Google 服务 |
+| `telegram` | geosite | Telegram |
+| `geoip-private` | geoip | 内网 IP 段 |
+| `geoip-cn` | geoip | 中国 IP 段 |
+| `geoip-telegram` | geoip | Telegram IP 段 |
+
+CDN: `https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/`
+
+---
 
 ## DNS 配置
 
-脚本自动生成以下 DNS 配置：
+```yaml
+dns:
+  enable: true
+  ipv6: true
+  listen: :1053
+  cache-algorithm: arc
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  fake-ip-range-v6: fc00::/18
+  fake-ip-filter: ["rule-set:private"]
 
-- **fake-ip 模式**，缓存算法为 ARC
-- **国内 DNS**：阿里 DNS (`dns.alidns.com`)、腾讯 DNS (`doh.pub`) — 走 DIRECT
-- **国外 DNS**：Cloudflare (`dns.cloudflare.com`)、Google (`dns.google`) — 走 节点选择
-- **Hosts 映射**：加速 DNS 解析，屏蔽 B 站 PCDN
-- **IPv6 支持**：默认开启
+  # 代理服务器 DNS（走 DIRECT 避免死循环）
+  proxy-server-nameserver:
+    - https://dns.alidns.com/dns-query#DIRECT
+    - https://doh.pub/dns-query#DIRECT
+
+  default-nameserver: [223.5.5.5, 119.29.29.29]
+
+  # 普通域名 DNS（走代理避免 DNS 污染）
+  nameserver:
+    - https://dns.cloudflare.com/dns-query#节点选择
+    - https://dns.google/dns-query#节点选择
+
+  nameserver-policy:
+    "*": system  # 未匹配走系统 DNS
+
+  # 直连流量 DNS
+  direct-nameserver: [system, 223.5.5.5, 119.29.29.29]
+```
+
+### Hosts 映射
+
+```yaml
+hosts:
+  "dns.alidns.com": [223.5.5.5, 223.6.6.6]      # 固定阿里 DNS IP
+  "doh.pub": [1.12.12.12, 120.53.53.53]           # 固定腾讯 DNS IP
+  "dns.cloudflare.com": [1.1.1.1, 1.0.0.1]       # 固定 Cloudflare DNS IP
+  "dns.google": [8.8.8.8, 8.8.4.4]               # 固定 Google DNS IP
+  "services.googleapis.cn": ["services.googleapis.com"]  # Google 服务正确解析
+  "+.mcdn.bilivideo.com": [0.0.0.0]               # 屏蔽 B 站 PCDN
+  "+.mcdn.bilivideo.cn": [0.0.0.0]                # 屏蔽 B 站 PCDN
+```
+
+---
 
 ## 本地测试
 
@@ -117,7 +212,7 @@ MATCH → 漏网之鱼
 npm install
 ```
 
-准备测试配置 `Proxies.yaml`，包含 `proxies` 数组（每个节点需含 `type` 和 `name`）：
+准备测试配置 `Proxies.yaml`（需含 `proxies` 数组，每个节点需 `type` 和 `name` 字段）：
 
 ```yaml
 proxies:
@@ -125,29 +220,35 @@ proxies:
     type: hysteria2
     server: example.com
     port: 443
-    # ...
   - name: "🇯🇵 JP Trojan"
     type: trojan
     server: example.jp
     port: 443
-    # ...
 ```
 
 运行：
 
 ```bash
-node -e "const yaml=require('js-yaml'),fs=require('fs'); const c=yaml.load(fs.readFileSync('Proxies.yaml','utf8')); console.log(yaml.dump(require('./ShiroRikka.js').main(c)))" > processed_config.yaml
+node -e "
+  const yaml = require('js-yaml'), fs = require('fs');
+  const c = yaml.load(fs.readFileSync('Proxies.yaml', 'utf8'));
+  console.log(yaml.dump(require('./ShiroRikka.js').main(c)))
+" > processed_config.yaml
 ```
+
+---
 
 ## 项目结构
 
 ```
 MyClash/
-├── ShiroRikka.js       # 主脚本 (v4.13) — 按协议类型生成代理组
-├── AGENTS.md           # 开发规范与注意事项
-├── README.md           # 本文档
-└── package.json        # 项目依赖
+├── ShiroRikka.js    # 主脚本 (v4.15) — 按协议类型生成代理组
+├── README.md        # 本文档
+├── AGENTS.md        # 开发规范与注意事项
+└── package.json     # 项目依赖
 ```
+
+---
 
 ## License
 
