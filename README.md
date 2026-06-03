@@ -37,7 +37,6 @@ GLOBAL (select, include-all)
 │   ├─ TUIC (select)                 ← 同上结构
 │   ├─ Trojan (select)               ← 同上
 │   ├─ VLESS (select)                ← 同上
-│   ├─ AnyTLS (select)               ← 同上
 │   └─ DIRECT
 │
 ├─ 漏网之鱼 (select)                  → 节点选择 / DIRECT
@@ -50,7 +49,7 @@ GLOBAL (select, include-all)
 | 分组 | 类型 | 说明 |
 |------|------|------|
 | **节点选择** | `select` | 主入口，列出所有协议组 + DIRECT，可手动切换或设为自动 |
-| **Hysteria2 / TUIC / Trojan / VLESS / AnyTLS** | `select` | 协议组，包含可见的自动回退 + 隐藏的自动选择两个策略 |
+| **Hysteria2 / TUIC / Trojan / VLESS** | `select` | 协议组，包含可见的自动回退 + 隐藏的自动选择两个策略 |
 | **{name}-自动回退** | `fallback` (visible) | 自动测速，选第一个可用节点，故障自动切换 |
 | **{name}-自动选择** | `url-test` (hidden) | 自动测速，选延迟最低节点（容差 100ms） |
 | **广告拦截 / 应用净化** | `select` | 选择 REJECT 拦截或 DIRECT 放行 |
@@ -89,13 +88,13 @@ hidden: true
 
 脚本读取每个代理节点的 `type` 字段，自动归类：
 
-| 代理类型 `proxy.type` | 归入分组 | 图标 |
-|----------------------|---------|------|
-| `hysteria2` / `hy2` | Hysteria2 | Qure Hysteria2.png |
-| `tuic` | TUIC | Qure TUIC.png |
-| `trojan` | Trojan | Qure Trojan.png |
-| `vless` | VLESS | Qure VLESS.png |
-| 其余（vmess / shadowsocks / hysteria / socks5 / http 等） | AnyTLS | Verge globe.svg |
+| 代理类型 `proxy.type` | 归入分组 |
+|----------------------|---------|
+| `hysteria2` / `hy2` | Hysteria2 |
+| `tuic` | TUIC |
+| `trojan` | Trojan |
+| `vless` | VLESS |
+| 其余（vmess / shadowsocks / hysteria / socks5 / http 等） | 不归入任何分组 |
 
 > 不需要在节点名中添加特殊标记，脚本直接从 `proxy.type` 识别协议类型。
 
