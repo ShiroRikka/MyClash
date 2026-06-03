@@ -1,8 +1,8 @@
-# Clash.Meta 代理组生成脚本
+# Mihomo (Clash Meta) 代理组生成脚本
 
-自动识别代理节点特征，生成智能代理组配置。
+按代理协议类型自动分类，生成简洁的 S级 / A级 / 兜底 三级代理组配置。
 
-**当前版本：v4.10**
+**当前版本：v4.13**
 
 ## 快速开始
 
@@ -16,129 +16,67 @@
 
 将脚本 URL 添加到配置文件：
 
-[脚本地址](https://raw.githubusercontent.com/ShiroRikka/Clash.Meta-Script/main/ShiroRikka.js)
+[脚本地址](https://raw.githubusercontent.com/ShiroRikka/MyClash/main/ShiroRikka.js)
 
-## 脚本说明
+## 分组架构
 
-### ShiroRikka.js（动态代理组生成）
-
-基于节点名称特征（国旗 emoji、倍率标签、质量前缀、解锁标记等）**动态生成**代理组，适合订阅源节点命名规范的场景。
-
-### AIsouler.js（完整配置模板）
-
-源自 [AIsouler/MIHOMO_YAMLS](https://github.com/HenryChiao/MIHOMO_YAMLS)，生成**完整 Mihomo 配置**（含规则集、策略组、DNS、TUN 等），适合需要开箱即用完整配置的用户。
-
-**使用方式：**
-```js
-const config = require('./AIsouler.js').main({
-  subscriptionUrl: '你的订阅链接',
-  proxies: [] // 可选：额外添加的直连节点
-})
+```
+GLOBAL (select)
+ └─ 节点选择 (select)
+     ├─ S级 (select)               ← 高性能协议
+     │   ├─ Hysteria2 (fallback)    ← Hysteria2 / hy2 节点，自动回退
+     │   └─ TUIC (fallback)         ← TUIC 节点，自动回退
+     ├─ A级 (select)               ← 稳定协议
+     │   ├─ Trojan (fallback)       ← Trojan 节点，自动回退
+     │   └─ VLESS (fallback)        ← VLESS 节点，自动回退
+     └─ 兜底 (select)              ← 其余协议
+         └─ AnyTLS (fallback)       ← VMess / Shadowsocks / Hysteria 等，自动回退
+ └─ 漏网之鱼 (select) → 节点选择 / DIRECT
+ └─ 广告拦截 / 应用净化 (select) → REJECT / DIRECT
 ```
 
-**特点：**
-- 37 个规则集（广告、GFW、CN、各大平台）
-- 34 个策略组（按地区、平台、倍率、质量分组）
-- 完整 DNS / TUN / NTP / Hosts 配置
-- 节点过滤（排除订阅信息、广告节点）
+### 分组说明
 
-## 功能特性
+| 分组 | 类型 | 说明 |
+|------|------|------|
+| **S级** | `select` | 包含 Hysteria2 和 TUIC 子分组，用户手动切换或选择 AUTO |
+| **A级** | `select` | 包含 Trojan 和 VLESS 子分组，用户手动切换或选择 AUTO |
+| **兜底** | `select` | 包含 AnyTLS 子分组（其余协议），用户手动切换或选择 AUTO |
+| **Hysteria2 / TUIC / Trojan / VLESS / AnyTLS** | `fallback` | 自动测速，选用延迟最低的可用节点，故障自动切换 |
+| **广告拦截 / 应用净化** | `select` | 选择 REJECT 拦截或 DIRECT 放行 |
+| **漏网之鱼** | `select` | 默认走节点选择，可手动切直连 |
+| **GLOBAL** | `select` | 顶层主控，包含所有分组 |
 
-- 🌍 **自动地区分组** - 识别代理名中的国旗 emoji，主要地区独立分组，其余合并为「其他地区」
-- 🔓 **平台解锁分组** - 自动识别 GPT、Netflix、Gemini、Disney+、YouTube、Claude、Spotify 等解锁标记，生成对应分组
-- 📊 **带宽分级** - 1-5MB/s 各一组，>=6MB/s 为 6+MB/s 组
-- 📈 **倍率分组** - 按【Nx】标签扫描所有实际倍率值，每个值独立分组
-- 🏆 **质量分级** - 按 A/B/C 前缀分组，各自独立 fallback
-- 🔄 **智能回退** - 地区组和解锁组均使用 fallback 模式，自动跳过不可用节点
-- 🕸️ **漏网之鱼** - 未匹配规则流量可独立选择走代理或直连
-- 🛡️ **规则集** - 内置 Loyalsoldier 规则，广告拦截、应用净化
+### 自动回退策略
 
-## 支持的地区
+所有协议子分组均使用 Mihomo 的 `fallback` 类型，参数参考 [AIsouler/MyClash](https://github.com/AIsouler/MyClash)：
 
-主要地区（独立分组）：🇭🇰 香港、🇹🇼 台湾、🇯🇵 日本、🇺🇸 美国、🇸🇬 新加坡
+```yaml
+type: fallback
+url: https://www.gstatic.com/generate_204
+interval: 600       # 每 10 分钟测速一次
+timeout: 3000       # 单次测速 3 秒超时
+lazy: true          # 有流量时触发测速
+max-failed-times: 3 # 连续失败 3 次切换
+```
 
-其他合并为「其他地区」：🇨🇳 中国、🇬🇧 英国、🇩🇪 德国、🇫🇷 法国、🇦🇺 澳大利亚、🇨🇦 加拿大
+## 分类规则
 
-> 基于 proxy.name 中的 emoji 动态生成，不存在时不会创建。
+脚本读取每个代理节点的 `type` 字段，自动归类：
 
-## 代理组说明
+| 代理类型 `proxy.type` | 归入分组 | 所在等级 |
+|----------------------|---------|---------|
+| `hysteria2` / `hy2` | Hysteria2 | **S级** |
+| `tuic` | TUIC | **S级** |
+| `trojan` | Trojan | **A级** |
+| `vless` | VLESS | **A级** |
+| 其余（vmess / shadowsocks / hysteria / socks5 / http / direct 等） | AnyTLS | **兜底** |
 
-### 策略选择
+> 不需要在节点名中添加特殊标记，脚本直接识别协议类型，自动搞定分类。
 
-- **节点选择** - 顶层策略选择器，包含所有子分组
-- **自动回退** - 包含全部节点，故障自动切换（排除国内节点）
-- **漏网之鱼** - 未匹配规则流量，默认走节点选择，可切换直连
+### 空分组容错
 
-### 质量分组（fallback）
-
-按节点名前缀 `A-` / `B-` / `C-` 分类，各自独立分组：
-
-| 分组 | 匹配前缀 |
-|---|---|
-| A级节点 | `A-` |
-| B级节点 | `B-` |
-| C级节点 | `C-` |
-
-> 仅当节点列表中存在对应前缀时才会创建。
-
-### 倍率分组（fallback）
-
-按【Nx】标签扫描所有实际倍率值，每个值独立分组：
-
-| 分组 | 匹配标记 |
-|---|---|
-| 0.5x | `【0.5x】` |
-| 1x | `【1x】` |
-| 2x | `【2x】` |
-| ... | ... |
-| 10x | `【10x】` |
-
-> 倍率值按降序排列，仅当存在对应标记时才会创建。
-
-### 地区组（fallback）
-
-| 分组 | emoji | 匹配 |
-|---|---|---|
-| 🇭🇰 中国-香港 | `🇭🇰` | HK |
-| 🇹🇼 中国-台湾 | `🇹🇼` | TW |
-| 🇯🇵 日本 | `🇯🇵` | JP |
-| 🇺🇸 美国 | `🇺🇸` | US |
-| 🇸🇬 新加坡 | `🇸🇬` | SG |
-| 其他地区 | 🌐 | CN / GB / DE / FR / AU / CA |
-
-> 基于 proxy.name 中的 emoji 动态生成，不存在时不会创建。
-
-### 解锁组（fallback）
-
-根据代理节点名称中的标记自动识别并生成：
-
-| 分组 | 匹配标记 | 图标来源 |
-|---|---|---|
-| GPT解锁 | `GPT` | Qure (ChatGPT.png) |
-| Netflix解锁 | `NF` | Qure (Netflix.png) |
-| Gemini解锁 | `GM` | LobeHub (gemini.svg) |
-| Disney+解锁 | `D+` | Qure (StreamingCN.png) |
-| YouTube解锁 | `YT-` | Qure (YouTube.png) |
-| Claude解锁 | `CL-` | Qure (AI.png) |
-| Spotify解锁 | `SP-` | Qure (Spotify.png) |
-
-> 仅当节点列表中存在匹配标记时，对应分组才会生成。
-
-### 带宽组（load-balance）
-
-- 6+MB/s (>=6MB/s)
-- 5MB/s
-- 4MB/s
-- 3MB/s
-- 2MB/s
-- 1MB/s
-- <1MB/s
-
-### 功能组
-
-- **广告拦截** - select (REJECT / DIRECT)
-- **应用净化** - select (REJECT / DIRECT)
-- **GLOBAL** - 主控选择器
+如果某个协议完全没有对应节点，该分组不会创建，上层选择器也会自动调整。例如无 Hysteria2 和 TUIC 节点时，S级及其子分组不会出现在配置中。
 
 ## 规则说明
 
@@ -146,8 +84,6 @@ const config = require('./AIsouler.js').main({
 
 ```
 applications → DIRECT
-clash.razord.top → DIRECT
-yacd.haishan.me → DIRECT
 private → DIRECT
 reject → REJECT
 icloud → DIRECT
@@ -165,36 +101,15 @@ MATCH → 漏网之鱼
 
 > 最后一跳 `MATCH` 路由到 **漏网之鱼**，用户可在 GUI 中切换走代理或直连。
 
-## 节点命名规范
+## DNS 配置
 
-为获得最佳分组效果，建议代理节点按以下格式命名：
+脚本自动生成以下 DNS 配置：
 
-```
-{国旗}{地区}_{序号}|{速度}|{倍率}|{质量前缀}|{解锁标记1}|{解锁标记2}|...
-```
-
-**示例：**
-
-```yaml
-proxies:
-  - name: "🇭🇰HK_1|5.2MB/s|【2x】|A-|YT-HK|NF|SP-HK"
-  - name: "🇸🇬SG_1|5.5MB/s|【10x】|B-|YT-SG|NF-SG|D+|GPT|GM-SG|CL-SG"
-  - name: "🇯🇵JP_1|6.9MB/s|【1x】|C-|YT-JP|NF|GM-JP|SP-JP"
-  - name: "🇺🇸US_1|4.5MB/s|【0.5x】|YT-CN|NF|D+|GPT|GPT⁺-US"
-  - name: "🇬🇧GB_1|3.1MB/s|【5x】|A-|YT-GB|NF|GM-GB"
-```
-
-**标记说明：**
-
-- `A-` / `B-` / `C-` - 质量分级前缀（A级最优，C级最差）
-- `【Nx】` - 倍率标签，如 `【0.5x】`、`【1x】`、`【2x】`、`【10x】`
-- `GPT` / `GPT⁺` - 解锁 OpenAI/ChatGPT
-- `NF` / `NF-{地区}` - 解锁 Netflix
-- `GM` / `GM-{地区}` - 解锁 Google Gemini
-- `D+` - 解锁 Disney+
-- `YT-{地区}` - 解锁 YouTube Premium
-- `CL-` - 解锁 Claude
-- `SP-{地区}` - 解锁 Spotify
+- **fake-ip 模式**，缓存算法为 ARC
+- **国内 DNS**：阿里 DNS (`dns.alidns.com`)、腾讯 DNS (`doh.pub`) — 走 DIRECT
+- **国外 DNS**：Cloudflare (`dns.cloudflare.com`)、Google (`dns.google`) — 走 节点选择
+- **Hosts 映射**：加速 DNS 解析，屏蔽 B 站 PCDN
+- **IPv6 支持**：默认开启
 
 ## 本地测试
 
@@ -202,17 +117,23 @@ proxies:
 npm install
 ```
 
-测试文件命名 `Proxies.yaml`，包含 `proxies` 数组：
+准备测试配置 `Proxies.yaml`，包含 `proxies` 数组（每个节点需含 `type` 和 `name`）：
 
 ```yaml
 proxies:
-  - name: "🇭🇰HK_1|5.2MB/s|【2x】|A-|YT-HK|NF|SP-HK"
-    # ...其他配置
-  - name: "🇸🇬SG_1|5.5MB/s|【10x】|B-|YT-SG|NF-SG|D+|GPT|GM-SG|CL-SG"
-    # ...其他配置
+  - name: "🇭🇰 HK Hysteria2"
+    type: hysteria2
+    server: example.com
+    port: 443
+    # ...
+  - name: "🇯🇵 JP Trojan"
+    type: trojan
+    server: example.jp
+    port: 443
+    # ...
 ```
 
-脚本运行后会输出到 `processed_config.yaml`：
+运行：
 
 ```bash
 node -e "const yaml=require('js-yaml'),fs=require('fs'); const c=yaml.load(fs.readFileSync('Proxies.yaml','utf8')); console.log(yaml.dump(require('./ShiroRikka.js').main(c)))" > processed_config.yaml
@@ -221,18 +142,12 @@ node -e "const yaml=require('js-yaml'),fs=require('fs'); const c=yaml.load(fs.re
 ## 项目结构
 
 ```
-Clash.Meta-Script/
-├── ShiroRikka.js       # 主脚本 (v4.10) - 动态代理组生成
-├── AIsouler.js         # 配置模板 (v1.0) - 完整 Mihomo 配置生成
+MyClash/
+├── ShiroRikka.js       # 主脚本 (v4.13) — 按协议类型生成代理组
 ├── AGENTS.md           # 开发规范与注意事项
-├── Proxies.yaml        # 测试用代理配置
-├── package.json        # 项目依赖
-└── README.md           # 本文档
+├── README.md           # 本文档
+└── package.json        # 项目依赖
 ```
-
-## 依赖
-
-- js-yaml (开发/测试用)
 
 ## License
 
