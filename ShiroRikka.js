@@ -47,7 +47,7 @@ function main(config) {
 
   // ===== 策略组基础配置 =====
 
-  // 自动回退（fallback, hidden）
+  // 自动回退（fallback, visible）
   const fallbackBaseOption = {
     type: "fallback",
     url: "https://www.gstatic.com/generate_204",
@@ -55,7 +55,6 @@ function main(config) {
     timeout: 3000,
     lazy: true,
     "max-failed-times": 3,
-    hidden: true,
   }
 
   // 自动选择（url-test, hidden）
@@ -90,7 +89,7 @@ function main(config) {
         name,
         icon,
         type: "select",
-        proxies: [...proxies, fallbackName, autoName],
+        proxies: [fallbackName, autoName],
       },
     ]
   }
