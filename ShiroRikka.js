@@ -1,9 +1,11 @@
-// v4.15 — 协议组 select 只含自动回退/自动选择，不列节点
+// v4.15 — 协议级 select 分组 + 仅 MetaCubeX 官方规则源
 function main(config) {
+  // 参数校验
   if (!config || typeof config !== "object") {
     throw new TypeError("config 必须是对象")
   }
   const allProxies = Array.isArray(config.proxies) ? config.proxies : []
+
   const validProxies = allProxies.filter(p => p && typeof p.name === "string")
 
   const CDN = "https://cdn.jsdelivr.net/gh/"
@@ -45,7 +47,7 @@ function main(config) {
 
   // ===== 策略组基础配置 =====
 
-  // 自动回退（fallback）— 稳定性优先，选第一个可用（可见，用户可切换过来）
+  // 自动回退（fallback, hidden）
   const fallbackBaseOption = {
     type: "fallback",
     url: "https://www.gstatic.com/generate_204",
@@ -53,9 +55,10 @@ function main(config) {
     timeout: 3000,
     lazy: true,
     "max-failed-times": 3,
+    hidden: true,
   }
 
-  // 自动选择（url-test, hidden）— 速度优先，选延迟最低
+  // 自动选择（url-test, hidden）
   const urlTestBaseOption = {
     type: "url-test",
     url: "https://www.gstatic.com/generate_204",
@@ -68,10 +71,6 @@ function main(config) {
   }
 
   // ===== 构建协议分组 =====
-  // 每个协议生成三个分组：
-  //   1. {name}-自动回退  (fallback)      — 选第一个可用节点
-  //   2. {name}-自动选择  (url-test, hidden) — 选延迟最低节点
-  //   3. {name}            (select)       — 在以上两个策略之间切换
   function createProtocolGroup(name, icon, proxies) {
     const fallbackName = `${name}-自动回退`
     const autoName = `${name}-自动选择`
@@ -91,53 +90,43 @@ function main(config) {
         name,
         icon,
         type: "select",
-        proxies: [fallbackName, autoName],
+        proxies: [...proxies, fallbackName, autoName],
       },
     ]
   }
 
   const proxyGroups = []
 
-  // Hysteria2
   if (protocolBins.hysteria2.length > 0) {
     proxyGroups.push(
       ...createProtocolGroup("Hysteria2", `${CDN_QURE}Hysteria2.png`, protocolBins.hysteria2)
     )
   }
-
-  // TUIC
   if (protocolBins.tuic.length > 0) {
     proxyGroups.push(
       ...createProtocolGroup("TUIC", `${CDN_QURE}TUIC.png`, protocolBins.tuic)
     )
   }
-
-  // Trojan
   if (protocolBins.trojan.length > 0) {
     proxyGroups.push(
       ...createProtocolGroup("Trojan", `${CDN_QURE}Trojan.png`, protocolBins.trojan)
     )
   }
-
-  // VLESS
   if (protocolBins.vless.length > 0) {
     proxyGroups.push(
       ...createProtocolGroup("VLESS", `${CDN_QURE}VLESS.png`, protocolBins.vless)
     )
   }
-
-  // AnyTLS（兜底）
   if (protocolBins.other.length > 0) {
     proxyGroups.push(
       ...createProtocolGroup("AnyTLS", `${CDN_VERGE}globe.svg`, protocolBins.other)
     )
   }
 
-  // ===== 顶层选择器 =====
   const mainGroupNames = ["Hysteria2", "TUIC", "Trojan", "VLESS", "AnyTLS"]
     .filter(n => proxyGroups.some(g => g.name === n))
 
-  // 节点选择：直接包含各协议组
+  // 节点选择
   proxyGroups.push({
     name: "节点选择",
     icon: `${CDN_QURE}Proxy.png`,
@@ -152,7 +141,6 @@ function main(config) {
     type: "select",
     proxies: ["REJECT", "DIRECT"],
   })
-
   // 应用净化
   proxyGroups.push({
     name: "应用净化",
@@ -160,7 +148,6 @@ function main(config) {
     type: "select",
     proxies: ["REJECT", "DIRECT"],
   })
-
   // 漏网之鱼
   proxyGroups.push({
     name: "漏网之鱼",
@@ -168,7 +155,6 @@ function main(config) {
     type: "select",
     proxies: ["节点选择", "DIRECT"],
   })
-
   // GLOBAL
   proxyGroups.push({
     name: "GLOBAL",
@@ -176,15 +162,13 @@ function main(config) {
     "include-all": true,
     type: "select",
     proxies: [
-      "节点选择",
-      "漏网之鱼",
+      "节点选择", "漏网之鱼",
       ...mainGroupNames,
-      "广告拦截",
-      "应用净化",
+      "广告拦截", "应用净化",
     ],
   })
 
-  // 将「节点选择」移到最前面（面板中显示在首位）
+  // 将「节点选择」移到最前面
   const ngIdx = proxyGroups.findIndex(g => g.name === "节点选择")
   if (ngIdx > 0) {
     const [nodeSelect] = proxyGroups.splice(ngIdx, 1)
@@ -193,7 +177,9 @@ function main(config) {
 
   config["proxy-groups"] = proxyGroups
 
-  // ===== DNS 锚点 =====
+  // ===== DNS 配置 =====
+  const metaCDN = "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta"
+
   const chinaDNS = [
     "https://dns.alidns.com/dns-query#DIRECT",
     "https://doh.pub/dns-query#DIRECT",
@@ -203,7 +189,6 @@ function main(config) {
     "https://dns.google/dns-query#节点选择",
   ]
 
-  // ===== DNS 配置 =====
   config.dns = {
     enable: true,
     ipv6: true,
@@ -236,90 +221,91 @@ function main(config) {
     "+.mcdn.bilivideo.cn": ["0.0.0.0"],
   }
 
+  // ===== Rule Providers（仅 MetaCubeX 官方 .mrs 源）=====
   const ruleProviderCommon = {
     type: "http",
     interval: 86400,
     format: "mrs",
   }
 
-  const ruleProvidersData = [
-    {
-      name: "reject",
+  config["rule-providers"] = {
+    // --- geosite（域名分类）---
+    "category-ads-all": {
+      ...ruleProviderCommon,
       behavior: "domain",
-      url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/category-ads-all.mrs",
-      path: "./ruleset/reject.mrs",
+      url: `${metaCDN}/geo/geosite/category-ads-all.mrs`,
+      path: "./ruleset/category-ads-all.mrs",
     },
-    {
-      name: "private",
+    "private": {
+      ...ruleProviderCommon,
       behavior: "domain",
-      url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/private.mrs",
+      url: `${metaCDN}/geo/geosite/private.mrs`,
       path: "./ruleset/private.mrs",
     },
-    {
-      name: "gfw",
+    "cn": {
+      ...ruleProviderCommon,
       behavior: "domain",
-      url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/gfw.mrs",
-      path: "./ruleset/gfw.mrs",
-    },
-    {
-      name: "cn",
-      behavior: "domain",
-      url: "https://fastly.jsdelivr.net/gh/wwqgtxx/clash-rules@release/direct.mrs",
+      url: `${metaCDN}/geo/geosite/cn.mrs`,
       path: "./ruleset/cn.mrs",
     },
-    {
-      name: "applications",
-      behavior: "classical",
-      url: "https://fastly.jsdelivr.net/gh/wwqgtxx/clash-rules@release/download.mrs",
-      path: "./ruleset/applications.mrs",
+    "gfw": {
+      ...ruleProviderCommon,
+      behavior: "domain",
+      url: `${metaCDN}/geo/geosite/gfw.mrs`,
+      path: "./ruleset/gfw.mrs",
     },
-    {
-      name: "lancidr",
+    "google": {
+      ...ruleProviderCommon,
+      behavior: "domain",
+      url: `${metaCDN}/geo/geosite/google.mrs`,
+      path: "./ruleset/google.mrs",
+    },
+    "telegram": {
+      ...ruleProviderCommon,
+      behavior: "domain",
+      url: `${metaCDN}/geo/geosite/telegram.mrs`,
+      path: "./ruleset/telegram.mrs",
+    },
+    // --- geoip（IP 分类）---
+    "geoip-private": {
+      ...ruleProviderCommon,
       behavior: "ipcidr",
-      url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/private.mrs",
-      path: "./ruleset/lancidr.mrs",
+      url: `${metaCDN}/geo/geoip/private.mrs`,
+      path: "./ruleset/geoip-private.mrs",
     },
-    {
-      name: "cncidr",
+    "geoip-cn": {
+      ...ruleProviderCommon,
       behavior: "ipcidr",
-      url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/cn.mrs",
-      path: "./ruleset/cncidr.mrs",
+      url: `${metaCDN}/geo/geoip/cn.mrs`,
+      path: "./ruleset/geoip-cn.mrs",
     },
-    {
-      name: "telegramcidr",
+    "geoip-telegram": {
+      ...ruleProviderCommon,
       behavior: "ipcidr",
-      url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/telegram.mrs",
-      path: "./ruleset/telegramcidr.mrs",
+      url: `${metaCDN}/geo/geoip/telegram.mrs`,
+      path: "./ruleset/geoip-telegram.mrs",
     },
-  ]
+  }
 
-  config["rule-providers"] = Object.fromEntries(
-    ruleProvidersData.map(({ name, behavior, url, path }) => [
-      name,
-      { ...ruleProviderCommon, behavior, url, path },
-    ]),
-  )
-
+  // ===== Rules =====
   config["rules"] = [
-    // 下载软件 → 直连（BT/磁力不走代理）
-    "RULE-SET,applications,DIRECT",
-    // 私有网络 → 直连
+    // 广告拦截（最优先）
+    "RULE-SET,category-ads-all,REJECT",
+    // 内网域名直连
     "RULE-SET,private,DIRECT",
-    // 广告/恶意域名 → 拒绝
-    "RULE-SET,reject,REJECT",
-    // 国内域名 → 直连
+    // 国内域名直连
     "RULE-SET,cn,DIRECT",
-    // GFW/被墙域名 → 走节点
+    // 被墙域名走代理
     "RULE-SET,gfw,节点选择",
-    // 局域网 IP → 直连
-    "RULE-SET,lancidr,DIRECT",
-    "GEOIP,LAN,DIRECT",
-    // 国内 IP → 直连
-    "RULE-SET,cncidr,DIRECT",
-    "GEOIP,CN,DIRECT",
-    // Telegram IP → 走节点
-    "RULE-SET,telegramcidr,节点选择",
-    // 兜底：其余全部走节点
+    // Google 走代理
+    "RULE-SET,google,节点选择",
+    // Telegram 走代理
+    "RULE-SET,telegram,节点选择",
+    // IP 规则
+    "RULE-SET,geoip-private,DIRECT,no-resolve",
+    "RULE-SET,geoip-cn,DIRECT,no-resolve",
+    "RULE-SET,geoip-telegram,节点选择,no-resolve",
+    // 兜底
     "MATCH,节点选择",
   ]
 
