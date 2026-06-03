@@ -190,11 +190,16 @@ function main(config) {
     ],
   })
 
-  // 将「节点选择」移到最前面
+  // 将「节点选择」移到最前面，「自动回退」紧跟其后
   const ngIdx = proxyGroups.findIndex(g => g.name === "节点选择")
   if (ngIdx > 0) {
     const [nodeSelect] = proxyGroups.splice(ngIdx, 1)
     proxyGroups.unshift(nodeSelect)
+  }
+  const fbIdx = proxyGroups.findIndex(g => g.name === "自动回退")
+  if (fbIdx > 1) {
+    const [fb] = proxyGroups.splice(fbIdx, 1)
+    proxyGroups.splice(1, 0, fb)
   }
 
   config["proxy-groups"] = proxyGroups
