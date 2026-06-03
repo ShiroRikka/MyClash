@@ -110,13 +110,12 @@ function main(config) {
   const mainGroupNames = ["Hysteria2", "TUIC", "Trojan", "VLESS", "AnyTLS"]
     .filter(n => proxyGroups.some(g => g.name === n))
 
-  // 全局自动选择（url-test, visible）— 在所有协议组间选最低延迟
+  // 全局自动选择（url-test, hidden）— 在所有协议组间选最低延迟
   if (mainGroupNames.length > 0) {
     proxyGroups.push({
       name: "自动选择",
       ...urlTestBaseOption,
       icon: `${CDN_QURE}Auto.png`,
-      hidden: false,
       proxies: [...mainGroupNames],
     })
   }
