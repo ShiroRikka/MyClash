@@ -236,51 +236,91 @@ function main(config) {
     "+.mcdn.bilivideo.cn": ["0.0.0.0"],
   }
 
-  const ruleProviderBase = { type: "http", interval: 86400 }
+  const ruleProviderCommon = {
+    type: "http",
+    interval: 86400,
+    format: "mrs",
+  }
+
   const ruleProvidersData = [
-    { name: "reject", behavior: "domain" },
-    { name: "private", behavior: "domain" },
-    { name: "icloud", behavior: "domain" },
-    { name: "apple", behavior: "domain" },
-    { name: "google", behavior: "domain" },
-    { name: "proxy", behavior: "domain" },
-    { name: "direct", behavior: "domain" },
-    { name: "gfw", behavior: "domain" },
-    { name: "lancidr", behavior: "ipcidr" },
-    { name: "cncidr", behavior: "ipcidr" },
-    { name: "telegramcidr", behavior: "ipcidr" },
-    { name: "applications", behavior: "classical" },
+    {
+      name: "reject",
+      behavior: "domain",
+      url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/category-ads-all.mrs",
+      path: "./ruleset/reject.mrs",
+    },
+    {
+      name: "private",
+      behavior: "domain",
+      url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/private.mrs",
+      path: "./ruleset/private.mrs",
+    },
+    {
+      name: "gfw",
+      behavior: "domain",
+      url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/gfw.mrs",
+      path: "./ruleset/gfw.mrs",
+    },
+    {
+      name: "cn",
+      behavior: "domain",
+      url: "https://fastly.jsdelivr.net/gh/wwqgtxx/clash-rules@release/direct.mrs",
+      path: "./ruleset/cn.mrs",
+    },
+    {
+      name: "applications",
+      behavior: "classical",
+      url: "https://fastly.jsdelivr.net/gh/wwqgtxx/clash-rules@release/download.mrs",
+      path: "./ruleset/applications.mrs",
+    },
+    {
+      name: "lancidr",
+      behavior: "ipcidr",
+      url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/private.mrs",
+      path: "./ruleset/lancidr.mrs",
+    },
+    {
+      name: "cncidr",
+      behavior: "ipcidr",
+      url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/cn.mrs",
+      path: "./ruleset/cncidr.mrs",
+    },
+    {
+      name: "telegramcidr",
+      behavior: "ipcidr",
+      url: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/telegram.mrs",
+      path: "./ruleset/telegramcidr.mrs",
+    },
   ]
 
   config["rule-providers"] = Object.fromEntries(
-    ruleProvidersData.map(({ name, behavior }) => [
+    ruleProvidersData.map(({ name, behavior, url, path }) => [
       name,
-      {
-        ...ruleProviderBase,
-        behavior,
-        url: `${CDN}Loyalsoldier/clash-rules@release/${name}.txt`,
-        path: `./ruleset/${name}.yaml`,
-      },
+      { ...ruleProviderCommon, behavior, url, path },
     ]),
   )
 
   config["rules"] = [
+    // 下载软件 → 直连（BT/磁力不走代理）
     "RULE-SET,applications,DIRECT",
-    "DOMAIN,clash.razord.top,DIRECT",
-    "DOMAIN,yacd.haishan.me,DIRECT",
+    // 私有网络 → 直连
     "RULE-SET,private,DIRECT",
+    // 广告/恶意域名 → 拒绝
     "RULE-SET,reject,REJECT",
-    "RULE-SET,icloud,DIRECT",
-    "RULE-SET,apple,DIRECT",
-    "RULE-SET,google,节点选择",
-    "RULE-SET,proxy,节点选择",
-    "RULE-SET,direct,DIRECT",
+    // 国内域名 → 直连
+    "RULE-SET,cn,DIRECT",
+    // GFW/被墙域名 → 走节点
+    "RULE-SET,gfw,节点选择",
+    // 局域网 IP → 直连
     "RULE-SET,lancidr,DIRECT",
-    "RULE-SET,cncidr,DIRECT",
-    "RULE-SET,telegramcidr,节点选择",
     "GEOIP,LAN,DIRECT",
+    // 国内 IP → 直连
+    "RULE-SET,cncidr,DIRECT",
     "GEOIP,CN,DIRECT",
-    "MATCH,漏网之鱼",
+    // Telegram IP → 走节点
+    "RULE-SET,telegramcidr,节点选择",
+    // 兜底：其余全部走节点
+    "MATCH,节点选择",
   ]
 
   return config
