@@ -32,13 +32,12 @@ GLOBAL (select, include-all)
 │
 ├─ 节点选择 (select)                  ← 主入口，含 DIRECT
 │   ├─ Hysteria2 (select)
-│   │   ├─ ─ 节点列表                  ← 可手选单个节点
-│   │   ├─ Hysteria2-自动回退 (fallback, hidden)  ← 自动选最优
+│   │   ├─ Hysteria2-自动回退 (fallback)  ← 自动选最优
 │   │   └─ Hysteria2-自动选择 (url-test, hidden)  ← 选最低延迟
-│   ├─ TUIC (select)                 ← 同上三层结构
+│   ├─ TUIC (select)                 ← 同上结构
 │   ├─ Trojan (select)               ← 同上
 │   ├─ VLESS (select)                ← 同上
-│   ├─ AnyTLS (select)               ← 兜底协议组
+│   ├─ AnyTLS (select)               ← 同上
 │   └─ DIRECT
 │
 ├─ 漏网之鱼 (select)                  → 节点选择 / DIRECT
@@ -51,8 +50,8 @@ GLOBAL (select, include-all)
 | 分组 | 类型 | 说明 |
 |------|------|------|
 | **节点选择** | `select` | 主入口，列出所有协议组 + DIRECT，可手动切换或设为自动 |
-| **Hysteria2 / TUIC / Trojan / VLESS / AnyTLS** | `select` | 协议组，展开可见节点列表 + 两个隐藏自动策略 |
-| **{name}-自动回退** | `fallback` (hidden) | 自动测速，选第一个可用节点，故障自动切换 |
+| **Hysteria2 / TUIC / Trojan / VLESS / AnyTLS** | `select` | 协议组，包含可见的自动回退 + 隐藏的自动选择两个策略 |
+| **{name}-自动回退** | `fallback` (visible) | 自动测速，选第一个可用节点，故障自动切换 |
 | **{name}-自动选择** | `url-test` (hidden) | 自动测速，选延迟最低节点（容差 100ms） |
 | **广告拦截 / 应用净化** | `select` | 选择 REJECT 拦截或 DIRECT 放行 |
 | **漏网之鱼** | `select` | 默认走节点选择，可手动切直连 |
@@ -62,7 +61,7 @@ GLOBAL (select, include-all)
 
 所有协议组均生成两个隐藏的自动策略组：
 
-**自动回退 (fallback)：**
+**自动回退 (fallback, visible)：**
 ```yaml
 type: fallback
 url: https://www.gstatic.com/generate_204
@@ -70,7 +69,6 @@ interval: 600       # 每 10 分钟测速一次
 timeout: 3000       # 单次测速 3 秒超时
 lazy: true          # 有流量时触发测速
 max-failed-times: 3 # 连续失败 3 次切换
-hidden: true
 ```
 
 **自动选择 (url-test)：**
