@@ -1,4 +1,4 @@
-// v4.12-modified — 按协议分组（S级/A级/兜底），自动回退策略参考 AIsouler/MyClash
+// v4.13 — 协议级 select 分组，含隐藏的自动回退/自动选择策略（参考 AIsouler/MyClash）
 function main(config) {
   // 参数校验：确保传入有效的配置对象
   if (!config || typeof config !== "object") {
@@ -47,9 +47,9 @@ function main(config) {
     }
   }
 
-  // ===== 构建策略组 =====
+  // ===== 策略组基础配置 =====
 
-  // fallback 自动回退策略（参考 AIsouler/MyClash 的 url-test 策略参数）
+  // fallback 自动回退（隐藏，参考 AIsouler/MyClash 的 url-test 参数）
   const fallbackBaseOption = {
     type: "fallback",
     url: "https://www.gstatic.com/generate_204",
@@ -57,68 +57,101 @@ function main(config) {
     timeout: 3000,
     lazy: true,
     "max-failed-times": 3,
+    hidden: true,
+  }
+
+  // url-test 自动选择（隐藏，参考 AIsouler/MyClash 的 url-test 参数）
+  const urlTestBaseOption = {
+    type: "url-test",
+    url: "https://www.gstatic.com/generate_204",
+    interval: 600,
+    timeout: 3000,
+    tolerance: 100,
+    lazy: true,
+    "max-failed-times": 3,
+    hidden: true,
+  }
+
+  // ===== 构建协议分组（参考 createRegionGroup 模式）=====
+
+  /**
+   * 为每个协议创建三个分组：
+   *   1. {name}-自动回退  (fallback, hidden) — 自动选第一个可用
+   *   2. {name}-自动选择  (url-test, hidden)  — 自动选延迟最低
+   *   3. {name}            (select)           — 手动选节点或自动策略
+   */
+  function createProtocolGroup(name, icon, proxies) {
+    const fallbackName = `${name}-自动回退`
+    const autoName = `${name}-自动选择`
+    return [
+      {
+        name: fallbackName,
+        ...fallbackBaseOption,
+        proxies,
+      },
+      {
+        name: autoName,
+        ...urlTestBaseOption,
+        icon: `${CDN_QURE}Auto.png`,
+        proxies,
+      },
+      {
+        name,
+        icon,
+        type: "select",
+        proxies: [...proxies, fallbackName, autoName],
+      },
+    ]
   }
 
   const proxyGroups = []
 
-  // ========== 协议级分组（自动回退 fallback） ==========
-
-  // Hysteria2 分组
+  // Hysteria2
   if (protocolBins.hysteria2.length > 0) {
-    proxyGroups.push({
-      name: "Hysteria2",
-      icon: `${CDN_QURE}Hysteria2.png`,
-      ...fallbackBaseOption,
-      proxies: protocolBins.hysteria2,
-    })
+    proxyGroups.push(
+      ...createProtocolGroup("Hysteria2", `${CDN_QURE}Hysteria2.png`, protocolBins.hysteria2)
+    )
   }
 
-  // TUIC 分组
+  // TUIC
   if (protocolBins.tuic.length > 0) {
-    proxyGroups.push({
-      name: "TUIC",
-      icon: `${CDN_QURE}TUIC.png`,
-      ...fallbackBaseOption,
-      proxies: protocolBins.tuic,
-    })
+    proxyGroups.push(
+      ...createProtocolGroup("TUIC", `${CDN_QURE}TUIC.png`, protocolBins.tuic)
+    )
   }
 
-  // Trojan 分组
+  // Trojan
   if (protocolBins.trojan.length > 0) {
-    proxyGroups.push({
-      name: "Trojan",
-      icon: `${CDN_QURE}Trojan.png`,
-      ...fallbackBaseOption,
-      proxies: protocolBins.trojan,
-    })
+    proxyGroups.push(
+      ...createProtocolGroup("Trojan", `${CDN_QURE}Trojan.png`, protocolBins.trojan)
+    )
   }
 
-  // VLESS 分组
+  // VLESS
   if (protocolBins.vless.length > 0) {
-    proxyGroups.push({
-      name: "VLESS",
-      icon: `${CDN_QURE}VLESS.png`,
-      ...fallbackBaseOption,
-      proxies: protocolBins.vless,
-    })
+    proxyGroups.push(
+      ...createProtocolGroup("VLESS", `${CDN_QURE}VLESS.png`, protocolBins.vless)
+    )
   }
 
-  // AnyTLS 分组（兜底）—— 包含所有剩余协议节点
+  // AnyTLS（兜底）
   if (protocolBins.other.length > 0) {
-    proxyGroups.push({
-      name: "AnyTLS",
-      icon: `${CDN_VERGE}globe.svg`,
-      ...fallbackBaseOption,
-      proxies: protocolBins.other,
-    })
+    proxyGroups.push(
+      ...createProtocolGroup(
+        "AnyTLS",
+        `${CDN_VERGE}globe.svg`,
+        protocolBins.other
+      )
+    )
   }
 
-  // ========== 等级选择分组（手动 select） ==========
+  // ===== 等级选择分组（手动 select） =====
+
+  const mainGroupNames = ["Hysteria2", "TUIC", "Trojan", "VLESS", "AnyTLS"]
+    .filter(n => proxyGroups.some(g => g.name === n))
 
   // S 级：包含 Hysteria2 + TUIC
-  const sChildren = ["Hysteria2", "TUIC"].filter(
-    name => proxyGroups.some(g => g.name === name)
-  )
+  const sChildren = ["Hysteria2", "TUIC"].filter(n => proxyGroups.some(g => g.name === n))
   if (sChildren.length > 0) {
     proxyGroups.push({
       name: "S级",
@@ -129,9 +162,7 @@ function main(config) {
   }
 
   // A 级：包含 Trojan + VLESS
-  const aChildren = ["Trojan", "VLESS"].filter(
-    name => proxyGroups.some(g => g.name === name)
-  )
+  const aChildren = ["Trojan", "VLESS"].filter(n => proxyGroups.some(g => g.name === n))
   if (aChildren.length > 0) {
     proxyGroups.push({
       name: "A级",
@@ -141,7 +172,7 @@ function main(config) {
     })
   }
 
-  // 兜底：包含 AnyTLS
+  // 兜底
   const hasAnyTLS = proxyGroups.some(g => g.name === "AnyTLS")
   if (hasAnyTLS) {
     proxyGroups.push({
@@ -154,10 +185,9 @@ function main(config) {
 
   // ========== 顶层选择器 ==========
 
-  // 节点选择：将所有等级组纳入
-  const tierGroups = ["S级", "A级", "兜底"].filter(
-    name => proxyGroups.some(g => g.name === name)
-  )
+  const tierGroups = ["S级", "A级", "兜底"].filter(n => proxyGroups.some(g => g.name === n))
+
+  // 节点选择
   proxyGroups.push({
     name: "节点选择",
     icon: `${CDN_QURE}Proxy.png`,
@@ -181,7 +211,7 @@ function main(config) {
     proxies: ["REJECT", "DIRECT"],
   })
 
-  // 漏网之鱼：未匹配规则的流量
+  // 漏网之鱼
   proxyGroups.push({
     name: "漏网之鱼",
     icon: `${CDN_QURE}Final.png`,
@@ -189,8 +219,7 @@ function main(config) {
     proxies: ["节点选择", "DIRECT"],
   })
 
-  // GLOBAL：顶层包括所有
-  const allGroupNames = proxyGroups.map(g => g.name)
+  // GLOBAL
   proxyGroups.push({
     name: "GLOBAL",
     icon: `${CDN_QURE}Global.png`,
@@ -200,11 +229,7 @@ function main(config) {
       "节点选择",
       "漏网之鱼",
       ...tierGroups,
-      ...(proxyGroups.some(g => g.name === "Hysteria2") ? ["Hysteria2"] : []),
-      ...(proxyGroups.some(g => g.name === "TUIC") ? ["TUIC"] : []),
-      ...(proxyGroups.some(g => g.name === "Trojan") ? ["Trojan"] : []),
-      ...(proxyGroups.some(g => g.name === "VLESS") ? ["VLESS"] : []),
-      ...(hasAnyTLS ? ["AnyTLS"] : []),
+      ...mainGroupNames,
       "广告拦截",
       "应用净化",
     ],
