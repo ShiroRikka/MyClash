@@ -184,6 +184,13 @@ function main(config) {
     ],
   })
 
+  // 将「节点选择」移到最前面（面板中显示在首位）
+  const ngIdx = proxyGroups.findIndex(g => g.name === "节点选择")
+  if (ngIdx > 0) {
+    const [nodeSelect] = proxyGroups.splice(ngIdx, 1)
+    proxyGroups.unshift(nodeSelect)
+  }
+
   config["proxy-groups"] = proxyGroups
 
   // ===== DNS 锚点 =====
