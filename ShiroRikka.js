@@ -205,7 +205,6 @@ function main(config) {
     nameserver: foreignDNS,
     "nameserver-policy": {
       "*": "system",
-      "rule-set:direct": chinaDNS,
     },
     "direct-nameserver": ["system", "223.5.5.5", "119.29.29.29"],
   }
