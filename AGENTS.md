@@ -1,4 +1,4 @@
-# AGENTS.md - Clash.Meta 脚本
+# AGENTS.md - Mihomo（Clash Meta）脚本
 
 ## 快速开始
 
@@ -10,7 +10,7 @@ npm install
 
 ## 本地测试
 
-测试文件命名 `Proxies.yaml`，包含 `proxies` 数组：
+测试文件命名 `Proxies.yaml`，包含 `proxies` 数组（每个节点需有 `type` 和 `name` 字段）：
 
 ```bash
 node -e "const yaml=require('js-yaml'),fs=require('fs'); const c=yaml.load(fs.readFileSync('Proxies.yaml','utf8')); console.log(yaml.dump(require('./ShiroRikka.js').main(c)))" > processed_config.yaml
@@ -32,20 +32,60 @@ module.exports = { main };
 
 ## 核心实现
 
-- **地区检测**：扫描所有代理名中的国旗 emoji，采用**排除法**——主要地区（🇭🇰中国-香港、🇹🇼中国-台湾、🇯🇵日本、🇺🇸美国、🇸🇬新加坡）独立分组，其余所有地区（无论多少个国家）自动合并为「其他地区」。不再使用固定国家白名单，确保任何国家节点都不会被遗漏
-- **倍率分组**：按【Nx】标签扫描所有实际倍率值（步进 0.1），每个值独立创建 fallback 分组（如 `0.1x`、`1x`、`2x`、`10x`）
-- **质量分组**：按 A/B/C 前缀分组，各自独立 fallback（A级节点、B级节点、C级节点）
-- **带宽分级**：`(\d+(?:\.\d+)?)\s*MB/s` 正则（`/i` 不区分大小写）提取，按数值降序分组（1-5MB/s 各一组，>=6MB/s 为 6+MB/s 组，<1MB/s 为 <1MB/s 组）。**注意：带宽组使用 `load-balance` 类型（round-robin），其他分组均为 `fallback`**
-- **解锁过滤**：平台解锁（GPT/NF/GM/D+/YT-/CL-/SP-）使用 `new RegExp(val.filter)`——注意 `D+` 在代码中写为 `D\\+`（`filter: "D\\+"`）以转义正则特殊字符
-- **DNS 与 Hosts**：自动生成完整 DNS 配置（fake-ip、国内/外 DNS 策略）+ hosts 映射（阿里 DNS、Google DNS 等）
-- **规则集**：从 Loyalsoldier/clash-rules 加载，默认结转 `MATCH,漏网之鱼`
-- **代理组顺序**：节点选择 → 质量/倍率 → 地区/其他地区 → 解锁 → 带宽 → 全局策略组 → 广告/应用/全球组
+### 分组架构（v4.13）
+
+**分三级：S级 → A级 → 兜底**
+
+- **协议分类**：遍历所有代理节点的 `type` 字段，通过 `switch/case` 分配到对应桶：
+  - `hysteria2` / `hy2` → Hysteria2（S级）
+  - `tuic` → TUIC（S级）
+  - `trojan` → Trojan（A级）
+  - `vless` → VLESS（A级）
+  - 其余（vmess / shadowsocks / hysteria / socks5 / http / direct）→ AnyTLS（兜底）
+
+- **等级组**（S级 / A级 / 兜底）：`type: "select"`，用户手动在子分组之间切换
+- **协议组**（Hysteria2 / TUIC / Trojan / VLESS / AnyTLS）：`type: "fallback"`，自动回退策略
+
+### 自动回退策略
+
+参考 [AIsouler/MyClash](https://github.com/AIsouler/MyClash) 的 url-test 参数改良：
+
+```js
+const fallbackBaseOption = {
+  type: "fallback",
+  url: "https://www.gstatic.com/generate_204",
+  interval: 600,       // 每 600 秒测速一次
+  timeout: 3000,       // 单次连 3 秒超时
+  lazy: true,          // 懒加载——无流量时不触发测速
+  "max-failed-times": 3, // 连续失败 3 次切换
+}
+```
+
+### 空分组容错
+
+如果某协议无匹配节点，该分组**不创建**，上层选择器自动排除。例如：
+
+- 无 hysteria2/hy2 节点 → Hysteria2 分组不存在
+- 无 tuic 节点 → TUIC 分组不存在
+- 两者皆无 → S级整个不创建
+
+通过 `proxyGroups.some(g => g.name === name)` 动态检测。
+
+### DNS 与 Hosts
+
+保持 v4.12 原样：
+- fake-ip 模式，ARC 缓存
+- 国内 DNS（alidns、doh.pub）走 DIRECT
+- 国外 DNS（Cloudflare、Google）走 节点选择
+- hosts 映射：阿里 DNS、Google DNS、B站 PCDN 屏蔽
+
+### 规则集
+
+从 Loyalsoldier/clash-rules 加载（同 v4.12），默认结转 `MATCH,漏网之鱼`。
 
 ## 注意
 
 1. 每次更改都需要版本更新：根据本次修改的大小，修改顶部 `// vX.Y` 注释
 2. 中文代理组名和注释不翻译保留
-3. 主要地区固定独立分组（HK/TW/JP/US/SG），其余地区自动合并为「其他地区」（排除法：扫描所有出现的国旗，减去主要地区即为其他地区，不设固定国家白名单）
-4. 地区代理组基于 `proxy.name` 中的 emoji 动态生成，不存在时不会创建
-5. **禁止添加 module.exports** - 某些客户端不支持，会报错
-6. 每次修改后，检查 `README.md` 是否需要同步更新
+3. **禁止添加 module.exports** - 某些客户端不支持，会报错
+4. 每次修改后，检查 `README.md` 是否需要同步更新
