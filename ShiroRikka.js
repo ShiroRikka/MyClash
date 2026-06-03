@@ -74,7 +74,7 @@ function main(config) {
         name,
         icon,
         type: "select",
-        proxies: [...proxies, autoName],
+        proxies: [autoName, ...proxies],
       },
     ]
   }
