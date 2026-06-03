@@ -134,11 +134,12 @@ function main(config) {
       icon: `${CDN_QURE}Auto.png`,
       proxies: [...mainGroupNames],
     })
-    // 全局自动回退（url-test, hidden）— 在所有协议组间自动切换
+    // 全局自动回退（url-test, visible）— 在所有协议组间自动切换
     proxyGroups.push({
       name: "自动回退",
       ...urlTestBaseOption,
       icon: `${CDN_QURE}Auto.png`,
+      hidden: false,
       proxies: [...mainGroupNames],
     })
   }
