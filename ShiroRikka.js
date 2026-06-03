@@ -126,12 +126,33 @@ function main(config) {
   const mainGroupNames = ["Hysteria2", "TUIC", "Trojan", "VLESS", "AnyTLS"]
     .filter(n => proxyGroups.some(g => g.name === n))
 
+  // 全局自动选择（url-test, hidden）— 在所有协议组间选最低延迟
+  if (mainGroupNames.length > 0) {
+    proxyGroups.push({
+      name: "自动选择",
+      ...urlTestBaseOption,
+      icon: `${CDN_QURE}Auto.png`,
+      proxies: [...mainGroupNames],
+    })
+    // 全局自动回退（url-test, hidden）— 在所有协议组间自动切换
+    proxyGroups.push({
+      name: "自动回退",
+      ...urlTestBaseOption,
+      icon: `${CDN_QURE}Auto.png`,
+      proxies: [...mainGroupNames],
+    })
+  }
+
   // 节点选择
   proxyGroups.push({
     name: "节点选择",
     icon: `${CDN_QURE}Proxy.png`,
     type: "select",
-    proxies: [...mainGroupNames, "DIRECT"],
+    proxies: [
+      ...(mainGroupNames.length > 0 ? ["自动选择", "自动回退"] : []),
+      ...mainGroupNames,
+      "DIRECT",
+    ],
   })
 
   // 广告拦截
