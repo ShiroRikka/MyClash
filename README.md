@@ -31,13 +31,13 @@ script:
 GLOBAL (select, include-all)
 │
 ├─ 节点选择 (select)                  ← 主入口，含 DIRECT
-│   ├─ 自动选择 (url-test, hidden)    ← 所有协议组间选最低延迟
+│   ├─ 自动选择 (url-test, hidden)
 │   │   ├─ Hysteria2 (select)
 │   │   ├─ TUIC (select)
 │   │   ├─ Trojan (select)
 │   │   ├─ VLESS (select)
 │   │   └─ AnyTLS (select)
-│   ├─ 自动回退 (url-test, hidden)    ← 所有协议组间自动切换
+│   ├─ 自动回退 (url-test)
 │   │   ├─ Hysteria2 (select)
 │   │   ├─ TUIC (select)
 │   │   ├─ Trojan (select)
@@ -63,7 +63,7 @@ GLOBAL (select, include-all)
 |------|------|------|
 | **节点选择** | `select` | 主入口，包含全局自动策略 + 各协议组 + DIRECT |
 | **自动选择** | `url-test` (hidden) | 在所有协议组间选最低延迟 |
-| **自动回退** | `url-test` (hidden) | 在所有协议组间自动切换 |
+| **自动回退** | `url-test` (visible) | 在所有协议组间自动切换 |
 | **Hysteria2 / TUIC / Trojan / VLESS / AnyTLS** | `select` | 单协议组，包含自动回退 + 自动选择两个子策略 |
 | **{name}-自动回退** | `fallback` (visible) | 该协议下自动测速，选第一个可用节点，故障自动切换 |
 | **{name}-自动选择** | `url-test` (hidden) | 该协议下选延迟最低节点（容差 100ms） |
