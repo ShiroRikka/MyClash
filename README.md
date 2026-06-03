@@ -31,7 +31,7 @@ script:
 GLOBAL (select, include-all)
 │
 ├─ 节点选择 (select)                  ← 主入口，含 DIRECT
-│   ├─ 自动选择 (url-test)
+│   ├─ 自动选择 (url-test, hidden)
 │   │   ├─ Hysteria2 (select)
 │   │   ├─ TUIC (select)
 │   │   ├─ Trojan (select)
