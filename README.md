@@ -31,6 +31,18 @@ script:
 GLOBAL (select, include-all)
 │
 ├─ 节点选择 (select)                  ← 主入口，含 DIRECT
+│   ├─ 自动选择 (url-test, hidden)    ← 所有协议组间选最低延迟
+│   │   ├─ Hysteria2 (select)
+│   │   ├─ TUIC (select)
+│   │   ├─ Trojan (select)
+│   │   ├─ VLESS (select)
+│   │   └─ AnyTLS (select)
+│   ├─ 自动回退 (url-test, hidden)    ← 所有协议组间自动切换
+│   │   ├─ Hysteria2 (select)
+│   │   ├─ TUIC (select)
+│   │   ├─ Trojan (select)
+│   │   ├─ VLESS (select)
+│   │   └─ AnyTLS (select)
 │   ├─ Hysteria2 (select)
 │   │   ├─ Hysteria2-自动回退 (fallback)  ← 自动选最优
 │   │   └─ Hysteria2-自动选择 (url-test, hidden)  ← 选最低延迟
@@ -49,10 +61,12 @@ GLOBAL (select, include-all)
 
 | 分组 | 类型 | 说明 |
 |------|------|------|
-| **节点选择** | `select` | 主入口，列出所有协议组 + DIRECT，可手动切换或设为自动 |
-| **Hysteria2 / TUIC / Trojan / VLESS / AnyTLS** | `select` | 协议组，包含可见的自动回退 + 隐藏的自动选择两个策略 |
-| **{name}-自动回退** | `fallback` (visible) | 自动测速，选第一个可用节点，故障自动切换 |
-| **{name}-自动选择** | `url-test` (hidden) | 自动测速，选延迟最低节点（容差 100ms） |
+| **节点选择** | `select` | 主入口，包含全局自动策略 + 各协议组 + DIRECT |
+| **自动选择** | `url-test` (hidden) | 在所有协议组间选最低延迟 |
+| **自动回退** | `url-test` (hidden) | 在所有协议组间自动切换 |
+| **Hysteria2 / TUIC / Trojan / VLESS / AnyTLS** | `select` | 单协议组，包含自动回退 + 自动选择两个子策略 |
+| **{name}-自动回退** | `fallback` (visible) | 该协议下自动测速，选第一个可用节点，故障自动切换 |
+| **{name}-自动选择** | `url-test` (hidden) | 该协议下选延迟最低节点（容差 100ms） |
 | **广告拦截 / 应用净化** | `select` | 选择 REJECT 拦截或 DIRECT 放行 |
 | **漏网之鱼** | `select` | 默认走节点选择，可手动切直连 |
 | **GLOBAL** | `select` | 顶层主控，包含所有分组 |
