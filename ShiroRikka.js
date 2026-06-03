@@ -20,6 +20,7 @@ function main(config) {
     tuic: [],
     trojan: [],
     vless: [],
+    anytls: [],
   }
 
   for (const proxy of validProxies) {
@@ -37,6 +38,9 @@ function main(config) {
         break
       case "vless":
         protocolBins.vless.push(proxy.name)
+        break
+      case "anytls":
+        protocolBins.anytls.push(proxy.name)
         break
       // 其他协议类型不归入任何分组
     }
@@ -113,8 +117,13 @@ function main(config) {
       ...createProtocolGroup("VLESS", `${CDN_QURE}VLESS.png`, protocolBins.vless)
     )
   }
+  if (protocolBins.anytls.length > 0) {
+    proxyGroups.push(
+      ...createProtocolGroup("AnyTLS", `${CDN_VERGE}globe.svg`, protocolBins.anytls)
+    )
+  }
 
-  const mainGroupNames = ["Hysteria2", "TUIC", "Trojan", "VLESS"]
+  const mainGroupNames = ["Hysteria2", "TUIC", "Trojan", "VLESS", "AnyTLS"]
     .filter(n => proxyGroups.some(g => g.name === n))
 
   // 节点选择
