@@ -1,7 +1,7 @@
 # Mihomo (Clash Meta) 代理组生成脚本
 
 按代理协议类型自动分类，生成协议级 select 分组（含自动回退/自动选择）。  
-**当前版本：v4.15**
+**当前版本：v4.16**
 
 ---
 
@@ -74,7 +74,7 @@ url: https://www.gstatic.com/generate_204
 interval: 600
 timeout: 3000
 tolerance: 100      # 延迟容差 100ms
-lazy: true
+lazy: false      # false=主动测速，无需流量触发
 max-failed-times: 3
 hidden: true
 ```
@@ -237,7 +237,7 @@ node -e "
 
 ```
 MyClash/
-├── ShiroRikka.js    # 主脚本 (v4.15) — 按协议类型生成代理组
+├── ShiroRikka.js    # 主脚本 (v4.16) — 按协议类型生成代理组
 ├── README.md        # 本文档
 ├── AGENTS.md        # 开发规范与注意事项
 └── package.json     # 项目依赖

@@ -56,7 +56,7 @@ const fallbackBaseOption = {
   url: "https://www.gstatic.com/generate_204",
   interval: 600,       // 每 600 秒测速一次
   timeout: 3000,       // 单次连 3 秒超时
-  lazy: true,          // 懒加载——无流量时不触发测速
+  lazy: false,         // 主动测速——每 600 秒定期测速，无需流量触发
   "max-failed-times": 3, // 连续失败 3 次切换
 }
 ```

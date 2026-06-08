@@ -1,4 +1,4 @@
-// v4.15 — 协议级 select 分组 + 仅 MetaCubeX 官方规则源
+// v4.16 — 协议级 select 分组 + 仅 MetaCubeX 官方规则源（url-test 改为主动测速）
 function main(config) {
   // 参数校验
   if (!config || typeof config !== "object") {
@@ -55,7 +55,7 @@ function main(config) {
     interval: 600,
     timeout: 3000,
     tolerance: 100,
-    lazy: true,
+    lazy: false,
     "max-failed-times": 3,
     hidden: true,
   }
