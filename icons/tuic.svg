@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <defs>
+    <linearGradient id="tuic-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00BCD4"/>
+      <stop offset="100%" stop-color="#0097A7"/>
+    </linearGradient>
+  </defs>
+  <!-- QUIC-like swoosh background -->
+  <path d="M100 10 L190 100 L100 190 L10 100 Z" fill="url(#tuic-grad)" opacity="0.12"/>
+  <path d="M100 30 L170 100 L100 170 L30 100 Z" fill="url(#tuic-grad)" opacity="0.15"/>
+  <!-- Stylized T letter -->
+  <path d="M60 50 L140 50 L140 70 L115 70 L115 150 L85 150 L85 70 L60 70 Z" fill="#00BCD4"/>
+  <!-- 0-RTT speed arrow -->
+  <path d="M155 95 L175 100 L155 105 L160 100 Z" fill="#00BCD4"/>
+  <path d="M25 95 L45 100 L25 105 L30 100 Z" fill="#00BCD4"/>
+  <circle cx="100" cy="100" r="3" fill="#00BCD4"/>
+</svg>

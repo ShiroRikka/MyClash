@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <defs>
+    <linearGradient id="anytls-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4CAF50"/>
+      <stop offset="100%" stop-color="#2E7D32"/>
+    </linearGradient>
+  </defs>
+  <!-- Shield outline -->
+  <path d="M100 10 L180 45 L180 100 C180 135 155 170 100 190 C45 170 20 135 20 100 L20 45 Z" fill="url(#anytls-grad)" opacity="0.1" stroke="#4CAF50" stroke-width="3"/>
+  <!-- Stylized A letter inside shield -->
+  <path d="M78 140 L100 60 L122 140 M86 115 L114 115" stroke="#4CAF50" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- TLS padlock hint - top dot -->
+  <circle cx="100" cy="90" r="3" fill="#4CAF50"/>
+</svg>
