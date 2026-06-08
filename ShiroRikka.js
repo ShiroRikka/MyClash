@@ -1,4 +1,4 @@
-// v4.16 — 协议级 select 分组 + 仅 MetaCubeX 官方规则源（url-test 改为主动测速）
+// v4.17 — 协议级 select 分组 + 仅 MetaCubeX 官方规则源 + 仓库本地图标
 function main(config) {
   // 参数校验
   if (!config || typeof config !== "object") {
@@ -13,6 +13,7 @@ function main(config) {
   const CDN_QURE = `${CDN}Koolson/Qure@master/IconSet/Color/`
   const CDN_VERGE = `${CDN}clash-verge-rev/clash-verge-rev.github.io@main/docs/assets/icons/`
   const CDN_STASH = `${CDN}shindgewongxj/WHATSINStash@master/icon/`
+  const CDN_ICONS = `${CDN}ShiroRikka/MyClash@main/icons/`
 
   // ===== 按协议类型分类节点 =====
   const protocolBins = {
@@ -83,27 +84,27 @@ function main(config) {
 
   if (protocolBins.hysteria2.length > 0) {
     proxyGroups.push(
-      ...createProtocolGroup("Hysteria2", `${CDN_QURE}Hysteria2.png`, protocolBins.hysteria2)
+      ...createProtocolGroup("Hysteria2", `${CDN_ICONS}hysteria2.svg`, protocolBins.hysteria2)
     )
   }
   if (protocolBins.tuic.length > 0) {
     proxyGroups.push(
-      ...createProtocolGroup("TUIC", `${CDN_QURE}TUIC.png`, protocolBins.tuic)
+      ...createProtocolGroup("TUIC", `${CDN_ICONS}tuic.svg`, protocolBins.tuic)
     )
   }
   if (protocolBins.trojan.length > 0) {
     proxyGroups.push(
-      ...createProtocolGroup("Trojan", `${CDN_QURE}Trojan.png`, protocolBins.trojan)
+      ...createProtocolGroup("Trojan", `${CDN_ICONS}trojan.svg`, protocolBins.trojan)
     )
   }
   if (protocolBins.vless.length > 0) {
     proxyGroups.push(
-      ...createProtocolGroup("VLESS", `${CDN_QURE}VLESS.png`, protocolBins.vless)
+      ...createProtocolGroup("VLESS", `${CDN_ICONS}vless.svg`, protocolBins.vless)
     )
   }
   if (protocolBins.anytls.length > 0) {
     proxyGroups.push(
-      ...createProtocolGroup("AnyTLS", `${CDN_VERGE}globe.svg`, protocolBins.anytls)
+      ...createProtocolGroup("AnyTLS", `${CDN_ICONS}anytls.svg`, protocolBins.anytls)
     )
   }
 
