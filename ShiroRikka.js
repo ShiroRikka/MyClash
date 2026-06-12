@@ -1,4 +1,4 @@
-// v4.19 — VLESS 分组仅限 xhttp+Reality 或 xhttp+TLS+CDN
+// v4.20 — 剔除未归类的杂鱼节点，移除 include-all
 function main(config) {
   // 参数校验
   if (!config || typeof config !== "object") {
@@ -24,31 +24,42 @@ function main(config) {
     vless: [],
   }
 
+  // 收集被归类的节点对象，未归类的杂鱼直接丢弃
+  const matchedProxies = []
+
   for (const proxy of validProxies) {
     const type = (proxy.type || "").toLowerCase()
     switch (type) {
       case "hysteria2":
       case "hy2":
         protocolBins.hysteria2.push(proxy.name)
+        matchedProxies.push(proxy)
         break
       case "tuic":
         protocolBins.tuic.push(proxy.name)
+        matchedProxies.push(proxy)
         break
       case "masque":
         protocolBins.masque.push(proxy.name)
+        matchedProxies.push(proxy)
         break
       case "anytls":
         protocolBins.anytls.push(proxy.name)
+        matchedProxies.push(proxy)
         break
       case "vless":
         // 仅保留 VLESS + XHTTP + Reality 或 VLESS + XHTTP + TLS + CDN
         if (proxy.network === "xhttp" && (proxy["reality-opts"] || proxy.tls)) {
           protocolBins.vless.push(proxy.name)
+          matchedProxies.push(proxy)
         }
         break
-      // 其他协议类型不归入任何分组
+      // 其他协议类型不归入任何分组，直接丢弃
     }
   }
+
+  // 用归类后的节点列表覆盖原始 proxies，杂鱼全部清除
+  config.proxies = matchedProxies
 
   // ===== 策略组基础配置 =====
 
@@ -161,7 +172,6 @@ function main(config) {
   proxyGroups.push({
     name: "GLOBAL",
     icon: `${CDN_QURE}Global.png`,
-    "include-all": true,
     type: "select",
     proxies: [
       "节点选择", "漏网之鱼",

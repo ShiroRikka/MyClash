@@ -32,7 +32,7 @@ module.exports = { main };
 
 ## 核心实现
 
-### 分组架构（v4.19）
+### 分组架构（v4.20）
 
 **协议级 select + url-test 自动选择**
 
@@ -42,9 +42,11 @@ module.exports = { main };
   - `masque` → Masque
   - `anytls` → AnyTLS
   - `vless` → VLESS **（仅限 `network: xhttp` + `reality-opts` 或 `tls`）**
-    - 其余（vmess / shadowsocks / trojan / hysteria / socks5 / http / direct）不归入任何分组
+    - 其余（vmess / shadowsocks / trojan / hysteria / socks5 / http / direct）不归入任何分组，**直接丢弃，不会出现在输出中**
 
 - **协议组**（Hysteria2 / TUIC / Masque / AnyTLS / VLESS）：每个协议生成 `{name}-自动选择`（url-test, hidden）+ `{name}`（select）两个分组
+
+- **节点过滤**：`config.proxies` 在输出時只保留被归类的节点，未匹配的杂鱼节点被彻底删除。`GLOBAL` 組不再使用 `include-all`，避免意外引入未归类节点。
 
 ### 自动选择策略
 
