@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <defs>
+    <linearGradient id="mieru-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#AF52DE"/>
+      <stop offset="100%" stop-color="#8944C4"/>
+    </linearGradient>
+  </defs>
+  <!-- Eye-like background (visible/invisible theme) -->
+  <path d="M100 40 Q160 100 100 160 Q40 100 100 40 Z" fill="url(#mieru-grad)" opacity="0.08"/>
+  <path d="M100 55 Q145 100 100 145 Q55 100 100 55 Z" fill="url(#mieru-grad)" opacity="0.10"/>
+  <!-- Stylized M letter (Mieru) -->
+  <path d="M55 55 L55 145 L75 145 L75 85 L95 120 L100 120 L120 85 L120 145 L140 145 L140 55 L120 55 L100 95 L80 55 Z" fill="#AF52DE"/>
+  <!-- Eye pupil dot -->
+  <circle cx="100" cy="120" r="5" fill="#AF52DE" opacity="0.5"/>
+</svg>

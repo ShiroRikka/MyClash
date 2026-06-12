@@ -1,4 +1,4 @@
-// v4.21 — VLESS 筛选收紧：仅 VLESS + REALITY + XHTTP，剔除纯 TLS 节点
+// v4.23 — 所有协议统一 300s 自动测速
 function main(config) {
   // 参数校验
   if (!config || typeof config !== "object") {
@@ -22,6 +22,8 @@ function main(config) {
     masque: [],
     anytls: [],
     vless: [],
+    wireguard: [],
+    mieru: [],
   }
 
   // 收集被归类的节点对象，未归类的杂鱼直接丢弃
@@ -54,6 +56,14 @@ function main(config) {
           matchedProxies.push(proxy)
         }
         break
+      case "wireguard":
+        protocolBins.wireguard.push(proxy.name)
+        matchedProxies.push(proxy)
+        break
+      case "mieru":
+        protocolBins.mieru.push(proxy.name)
+        matchedProxies.push(proxy)
+        break
       // 其他协议类型不归入任何分组，直接丢弃
     }
   }
@@ -67,7 +77,7 @@ function main(config) {
   const urlTestBaseOption = {
     type: "url-test",
     url: "https://www.gstatic.com/generate_204",
-    interval: 600,
+    interval: 300,
     timeout: 3000,
     tolerance: 100,
     lazy: false,
@@ -76,12 +86,13 @@ function main(config) {
   }
 
   // ===== 构建协议分组 =====
-  function createProtocolGroup(name, icon, proxies) {
+  function createProtocolGroup(name, icon, proxies, extraOptions = {}) {
     const autoName = `${name}-自动选择`
     return [
       {
         name: autoName,
         ...urlTestBaseOption,
+        ...extraOptions,
         icon: `${CDN_QURE}Auto.png`,
         proxies,
       },
@@ -121,8 +132,18 @@ function main(config) {
       ...createProtocolGroup("VLESS", `${CDN_ICONS}vless.svg`, protocolBins.vless)
     )
   }
+  if (protocolBins.wireguard.length > 0) {
+    proxyGroups.push(
+      ...createProtocolGroup("WireGuard", `${CDN_ICONS}wireguard.svg`, protocolBins.wireguard)
+    )
+  }
+  if (protocolBins.mieru.length > 0) {
+    proxyGroups.push(
+      ...createProtocolGroup("Mieru", `${CDN_ICONS}mieru.svg`, protocolBins.mieru)
+    )
+  }
 
-  const mainGroupNames = ["Hysteria2", "TUIC", "Masque", "AnyTLS", "VLESS"]
+  const mainGroupNames = ["Hysteria2", "TUIC", "Masque", "AnyTLS", "VLESS", "WireGuard", "Mieru"]
     .filter(n => proxyGroups.some(g => g.name === n))
 
   // 全局自动选择（url-test, hidden）— 在所有协议组间选最低延迟

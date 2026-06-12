@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <defs>
+    <linearGradient id="wg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34C759"/>
+      <stop offset="100%" stop-color="#28A745"/>
+    </linearGradient>
+  </defs>
+  <!-- Hexagon background (VPN tunnel) -->
+  <path d="M100 15 L175 57.5 L175 142.5 L100 185 L25 142.5 L25 57.5 Z" fill="url(#wg-grad)" opacity="0.10"/>
+  <path d="M100 30 L160 62.5 L160 137.5 L100 170 L40 137.5 L40 62.5 Z" fill="url(#wg-grad)" opacity="0.12"/>
+  <!-- Stylized W letter -->
+  <path d="M55 65 L70 135 L85 95 L100 135 L100 135 L115 95 L130 135 L145 65 L125 65 L115 105 L100 130 L85 105 L75 65 Z" fill="#34C759"/>
+  <!-- Key symbol (security) -->
+  <circle cx="100" cy="145" r="4" fill="#34C759" opacity="0.6"/>
+  <path d="M96 147 L92 153 L96 153 L97 150 L100 153 L104 153 L100 147" fill="#34C759" opacity="0.6"/>
+</svg>

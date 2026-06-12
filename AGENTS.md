@@ -42,9 +42,11 @@ module.exports = { main };
   - `masque` → Masque
   - `anytls` → AnyTLS
   - `vless` → VLESS **（仅限 `network: xhttp` + `reality-opts`，需同时兼具 VLESS + REALITY + XHTTP 三重条件）**
+  - `wireguard` → WireGuard **（全部）**
+  - `mieru` → Mieru **（全部）**
     - 其余（vmess / shadowsocks / trojan / hysteria / socks5 / http / direct）不归入任何分组，**直接丢弃，不会出现在输出中**
 
-- **协议组**（Hysteria2 / TUIC / Masque / AnyTLS / VLESS）：每个协议生成 `{name}-自动选择`（url-test, hidden）+ `{name}`（select）两个分组
+- **协议组**（Hysteria2 / TUIC / Masque / AnyTLS / VLESS / WireGuard / Mieru）：每个协议生成 `{name}-自动选择`（url-test, hidden）+ `{name}`（select）两个分组
 
 - **节点过滤**：`config.proxies` 在输出時只保留被归类的节点，未匹配的杂鱼节点被彻底删除。`GLOBAL` 組不再使用 `include-all`，避免意外引入未归类节点。
 
@@ -56,10 +58,10 @@ module.exports = { main };
 const urlTestBaseOption = {
   type: "url-test",
   url: "https://www.gstatic.com/generate_204",
-  interval: 600,       // 每 600 秒测速一次
-  timeout: 3000,       // 单次连 3 秒超时
-  tolerance: 100,      // 延迟容差 100ms
-  lazy: false,         // 主动测速——每 600 秒定期测速，无需流量触发
+  interval: 300,       // 每 300 秒测速一次
+    timeout: 3000,       // 单次连 3 秒超时
+    tolerance: 100,      // 延迟容差 100ms
+    lazy: false,         // 主动测速——每 300 秒定期测速，无需流量触发
   "max-failed-times": 3, // 连续失败 3 次切换
   hidden: true,        // 隐藏，不在面板显示
 }
@@ -72,6 +74,8 @@ const urlTestBaseOption = {
 - 无 hysteria2/hy2 节点 → Hysteria2 分组不存在
 - 无 tuic 节点 → TUIC 分组不存在
 - 无 masque 节点 → Masque 分组不存在
+- 无 wireguard 节点 → WireGuard 分组不存在
+- 无 mieru 节点 → Mieru 分组不存在
 
 通过 `proxyGroups.some(g => g.name === name)` 动态检测。
 
