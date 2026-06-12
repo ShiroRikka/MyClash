@@ -1,4 +1,4 @@
-// v4.24 — VLESS 分组条件放宽：reality / xhttp / enc 任一满足即可
+// v4.25 — VLESS 仅保留 REALITY 和 XHTTP 节点，去掉 encryption 条件
 function main(config) {
   // 参数校验
   if (!config || typeof config !== "object") {
@@ -50,8 +50,8 @@ function main(config) {
         matchedProxies.push(proxy)
         break
       case "vless":
-        // VLESS 节点：有 reality-opts（REALITY）、或 network=xhttp（XHTTP）、或有 encryption（自带加密）任一即可
-        if (proxy.network === "xhttp" || proxy["reality-opts"] || proxy.encryption) {
+        // VLESS 节点：仅保留有 reality-opts（REALITY）或 network=xhttp（XHTTP）的节点
+        if (proxy.network === "xhttp" || proxy["reality-opts"]) {
           protocolBins.vless.push(proxy.name)
           matchedProxies.push(proxy)
         }

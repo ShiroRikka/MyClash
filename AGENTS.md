@@ -41,7 +41,7 @@ module.exports = { main };
   - `tuic` → TUIC
   - `masque` → Masque
   - `anytls` → AnyTLS
-  - `vless` → VLESS **（有 `reality-opts` / `network: xhttp` / `encryption` 任一即可）**
+  - `vless` → VLESS **（有 `reality-opts` / `network: xhttp` 任一即可，不再接受仅 `encryption` 的节点）**
   - `wireguard` → WireGuard **（全部）**
   - `mieru` → Mieru **（全部）**
     - 其余（vmess / shadowsocks / trojan / hysteria / socks5 / http / direct）不归入任何分组，**直接丢弃，不会出现在输出中**
