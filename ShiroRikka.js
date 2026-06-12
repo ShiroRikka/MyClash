@@ -79,7 +79,7 @@ function main(config) {
     url: "https://www.gstatic.com/generate_204",
     interval: 300,
     timeout: 3000,
-    tolerance: 100,
+    tolerance: 10,
     lazy: false,
     "max-failed-times": 3,
     hidden: true,
