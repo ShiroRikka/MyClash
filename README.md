@@ -91,7 +91,7 @@ hidden: true
 | `tuic` | TUIC | 全部 |
 | `masque` | Masque | 全部 |
 | `anytls` | AnyTLS | 全部 |
-| `vless` | VLESS | **仅 `network: xhttp` 且 `reality-opts` 存在**（需 VLESS + REALITY + XHTTP 三重条件兼备，剔除纯 TLS 节点） |
+| `vless` | VLESS | **有 `reality-opts` / `network: xhttp` / `encryption` 任一即可**（不再强制三重条件） |
 | `wireguard` | WireGuard | 全部 |
 | `mieru` | Mieru | 全部 |
 | 其余（vmess / shadowsocks / trojan / hysteria / socks5 / http 等） | 不归入任何分组 | — |

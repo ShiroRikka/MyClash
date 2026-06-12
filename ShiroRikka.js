@@ -1,4 +1,4 @@
-// v4.23 — 所有协议统一 300s 自动测速
+// v4.24 — VLESS 分组条件放宽：reality / xhttp / enc 任一满足即可
 function main(config) {
   // 参数校验
   if (!config || typeof config !== "object") {
@@ -50,8 +50,8 @@ function main(config) {
         matchedProxies.push(proxy)
         break
       case "vless":
-        // 仅保留 VLESS + REALITY + XHTTP，不接纳纯 TLS 节点
-        if (proxy.network === "xhttp" && proxy["reality-opts"]) {
+        // VLESS 节点：有 reality-opts（REALITY）、或 network=xhttp（XHTTP）、或有 encryption（自带加密）任一即可
+        if (proxy.network === "xhttp" || proxy["reality-opts"] || proxy.encryption) {
           protocolBins.vless.push(proxy.name)
           matchedProxies.push(proxy)
         }
