@@ -91,7 +91,7 @@ hidden: true
 | `tuic` | TUIC | 全部 |
 | `masque` | Masque | 全部 |
 | `anytls` | AnyTLS | 全部 |
-| `vless` | VLESS | **仅 `network: xhttp` 且 `reality-opts` 或 `tls` 存在**（VLESS + XHTTP + Reality 或 VLESS + XHTTP + TLS + CDN） |
+| `vless` | VLESS | **仅 `network: xhttp` 且 `reality-opts` 存在**（需 VLESS + REALITY + XHTTP 三重条件兼备，剔除纯 TLS 节点） |
 | 其余（vmess / shadowsocks / trojan / hysteria / socks5 / http 等） | 不归入任何分组 | — |
 
 > 不需要在节点名中添加特殊标记，脚本直接从 `proxy.type` 识别协议类型。
@@ -237,7 +237,7 @@ node -e "
 
 ```
 MyClash/
-├── ShiroRikka.js    # 主脚本 (v4.19) — 按协议类型生成代理组，VLESS 仅限 xhttp
+├── ShiroRikka.js    # 主脚本 (v4.21) — 按协议类型生成代理组，VLESS 仅限 xhttp + reality
 ├── README.md        # 本文档
 ├── AGENTS.md        # 开发规范与注意事项
 └── package.json     # 项目依赖

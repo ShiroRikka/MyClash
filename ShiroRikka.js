@@ -1,4 +1,4 @@
-// v4.20 — 剔除未归类的杂鱼节点，移除 include-all
+// v4.21 — VLESS 筛选收紧：仅 VLESS + REALITY + XHTTP，剔除纯 TLS 节点
 function main(config) {
   // 参数校验
   if (!config || typeof config !== "object") {
@@ -48,8 +48,8 @@ function main(config) {
         matchedProxies.push(proxy)
         break
       case "vless":
-        // 仅保留 VLESS + XHTTP + Reality 或 VLESS + XHTTP + TLS + CDN
-        if (proxy.network === "xhttp" && (proxy["reality-opts"] || proxy.tls)) {
+        // 仅保留 VLESS + REALITY + XHTTP，不接纳纯 TLS 节点
+        if (proxy.network === "xhttp" && proxy["reality-opts"]) {
           protocolBins.vless.push(proxy.name)
           matchedProxies.push(proxy)
         }

@@ -41,7 +41,7 @@ module.exports = { main };
   - `tuic` → TUIC
   - `masque` → Masque
   - `anytls` → AnyTLS
-  - `vless` → VLESS **（仅限 `network: xhttp` + `reality-opts` 或 `tls`）**
+  - `vless` → VLESS **（仅限 `network: xhttp` + `reality-opts`，需同时兼具 VLESS + REALITY + XHTTP 三重条件）**
     - 其余（vmess / shadowsocks / trojan / hysteria / socks5 / http / direct）不归入任何分组，**直接丢弃，不会出现在输出中**
 
 - **协议组**（Hysteria2 / TUIC / Masque / AnyTLS / VLESS）：每个协议生成 `{name}-自动选择`（url-test, hidden）+ `{name}`（select）两个分组
