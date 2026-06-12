@@ -1,4 +1,4 @@
-// v4.18 — 保留协议调整：hysteria2/tuic/masque/anytls/vless
+// v4.19 — VLESS 分组仅限 xhttp+Reality 或 xhttp+TLS+CDN
 function main(config) {
   // 参数校验
   if (!config || typeof config !== "object") {
@@ -41,7 +41,10 @@ function main(config) {
         protocolBins.anytls.push(proxy.name)
         break
       case "vless":
-        protocolBins.vless.push(proxy.name)
+        // 仅保留 VLESS + XHTTP + Reality 或 VLESS + XHTTP + TLS + CDN
+        if (proxy.network === "xhttp" && (proxy["reality-opts"] || proxy.tls)) {
+          protocolBins.vless.push(proxy.name)
+        }
         break
       // 其他协议类型不归入任何分组
     }
