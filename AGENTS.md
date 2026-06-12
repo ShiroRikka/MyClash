@@ -32,32 +32,34 @@ module.exports = { main };
 
 ## 核心实现
 
-### 分组架构（v4.13）
+### 分组架构（v4.18）
 
-**分三级：S级 → A级 → 兜底**
+**协议级 select + url-test 自动选择**
 
 - **协议分类**：遍历所有代理节点的 `type` 字段，通过 `switch/case` 分配到对应桶：
-  - `hysteria2` / `hy2` → Hysteria2（S级）
-  - `tuic` → TUIC（S级）
-  - `trojan` → Trojan（A级）
-  - `vless` → VLESS（A级）
-  - 其余（vmess / shadowsocks / hysteria / socks5 / http / direct）→ AnyTLS（兜底）
+  - `hysteria2` / `hy2` → Hysteria2
+  - `tuic` → TUIC
+  - `masque` → Masque
+  - `anytls` → AnyTLS
+  - `vless` → VLESS
+  - 其余（vmess / shadowsocks / trojan / hysteria / socks5 / http / direct）不归入任何分组
 
-- **等级组**（S级 / A级 / 兜底）：`type: "select"`，用户手动在子分组之间切换
-- **协议组**（Hysteria2 / TUIC / Trojan / VLESS / AnyTLS）：`type: "fallback"`，自动回退策略
+- **协议组**（Hysteria2 / TUIC / Masque / AnyTLS / VLESS）：每个协议生成 `{name}-自动选择`（url-test, hidden）+ `{name}`（select）两个分组
 
-### 自动回退策略
+### 自动选择策略
 
 参考 [AIsouler/MyClash](https://github.com/AIsouler/MyClash) 的 url-test 参数改良：
 
 ```js
-const fallbackBaseOption = {
-  type: "fallback",
+const urlTestBaseOption = {
+  type: "url-test",
   url: "https://www.gstatic.com/generate_204",
   interval: 600,       // 每 600 秒测速一次
   timeout: 3000,       // 单次连 3 秒超时
+  tolerance: 100,      // 延迟容差 100ms
   lazy: false,         // 主动测速——每 600 秒定期测速，无需流量触发
   "max-failed-times": 3, // 连续失败 3 次切换
+  hidden: true,        // 隐藏，不在面板显示
 }
 ```
 
@@ -67,7 +69,7 @@ const fallbackBaseOption = {
 
 - 无 hysteria2/hy2 节点 → Hysteria2 分组不存在
 - 无 tuic 节点 → TUIC 分组不存在
-- 两者皆无 → S级整个不创建
+- 无 masque 节点 → Masque 分组不存在
 
 通过 `proxyGroups.some(g => g.name === name)` 动态检测。
 

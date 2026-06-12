@@ -1,4 +1,4 @@
-// v4.17 — 协议级 select 分组 + 仅 MetaCubeX 官方规则源 + 仓库本地图标
+// v4.18 — 保留协议调整：hysteria2/tuic/masque/anytls/vless
 function main(config) {
   // 参数校验
   if (!config || typeof config !== "object") {
@@ -19,9 +19,9 @@ function main(config) {
   const protocolBins = {
     hysteria2: [],
     tuic: [],
-    trojan: [],
-    vless: [],
+    masque: [],
     anytls: [],
+    vless: [],
   }
 
   for (const proxy of validProxies) {
@@ -34,14 +34,14 @@ function main(config) {
       case "tuic":
         protocolBins.tuic.push(proxy.name)
         break
-      case "trojan":
-        protocolBins.trojan.push(proxy.name)
-        break
-      case "vless":
-        protocolBins.vless.push(proxy.name)
+      case "masque":
+        protocolBins.masque.push(proxy.name)
         break
       case "anytls":
         protocolBins.anytls.push(proxy.name)
+        break
+      case "vless":
+        protocolBins.vless.push(proxy.name)
         break
       // 其他协议类型不归入任何分组
     }
@@ -92,14 +92,9 @@ function main(config) {
       ...createProtocolGroup("TUIC", `${CDN_ICONS}tuic.svg`, protocolBins.tuic)
     )
   }
-  if (protocolBins.trojan.length > 0) {
+  if (protocolBins.masque.length > 0) {
     proxyGroups.push(
-      ...createProtocolGroup("Trojan", `${CDN_ICONS}trojan.svg`, protocolBins.trojan)
-    )
-  }
-  if (protocolBins.vless.length > 0) {
-    proxyGroups.push(
-      ...createProtocolGroup("VLESS", `${CDN_ICONS}vless.svg`, protocolBins.vless)
+      ...createProtocolGroup("Masque", `${CDN_ICONS}masque.svg`, protocolBins.masque)
     )
   }
   if (protocolBins.anytls.length > 0) {
@@ -107,8 +102,13 @@ function main(config) {
       ...createProtocolGroup("AnyTLS", `${CDN_ICONS}anytls.svg`, protocolBins.anytls)
     )
   }
+  if (protocolBins.vless.length > 0) {
+    proxyGroups.push(
+      ...createProtocolGroup("VLESS", `${CDN_ICONS}vless.svg`, protocolBins.vless)
+    )
+  }
 
-  const mainGroupNames = ["Hysteria2", "TUIC", "Trojan", "VLESS", "AnyTLS"]
+  const mainGroupNames = ["Hysteria2", "TUIC", "Masque", "AnyTLS", "VLESS"]
     .filter(n => proxyGroups.some(g => g.name === n))
 
   // 全局自动选择（url-test, hidden）— 在所有协议组间选最低延迟

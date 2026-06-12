@@ -1,7 +1,7 @@
 # Mihomo (Clash Meta) 代理组生成脚本
 
 按代理协议类型自动分类，生成协议级 select 分组（含自动回退/自动选择）。  
-**当前版本：v4.16**
+**当前版本：v4.18**
 
 ---
 
@@ -34,16 +34,16 @@ GLOBAL (select, include-all)
 │   ├─ 自动选择 (url-test, hidden)
 │   │   ├─ Hysteria2 (select)
 │   │   ├─ TUIC (select)
-│   │   ├─ Trojan (select)
-│   │   ├─ VLESS (select)
-│   │   └─ AnyTLS (select)
+│   │   ├─ Masque (select)
+│   │   ├─ AnyTLS (select)
+│   │   └─ VLESS (select)
 │   ├─ Hysteria2 (select)
 │   │   ├─ Hysteria2-自动选择 (url-test, hidden)  ← 选最低延迟
 │   │   └─ Hysteria2协议的所有节点
 │   ├─ TUIC (select)                 ← 同上结构
-│   ├─ Trojan (select)               ← 同上
-│   ├─ VLESS (select)                ← 同上
+│   ├─ Masque (select)               ← 同上
 │   ├─ AnyTLS (select)               ← 同上
+│   ├─ VLESS (select)                ← 同上
 │   └─ DIRECT
 │
 ├─ 漏网之鱼 (select)                  → 节点选择 / DIRECT
@@ -57,7 +57,7 @@ GLOBAL (select, include-all)
 |------|------|------|
 | **节点选择** | `select` | 主入口，包含全局自动选择 + 各协议组 + DIRECT |
 | **自动选择** | `url-test` (hidden) | 在所有协议组间选最低延迟 |
-| **Hysteria2 / TUIC / Trojan / VLESS / AnyTLS** | `select` | 单协议组，包含协议下所有节点 + 自动选择子策略 |
+|| **Hysteria2 / TUIC / Masque / AnyTLS / VLESS** | `select` | 单协议组，包含协议下所有节点 + 自动选择子策略 |
 | **{name}-自动选择** | `url-test` (hidden) | 该协议下选延迟最低节点（容差 100ms） |
 | **广告拦截 / 应用净化** | `select` | 选择 REJECT 拦截或 DIRECT 放行 |
 | **漏网之鱼** | `select` | 默认走节点选择，可手动切直连 |
@@ -89,10 +89,10 @@ hidden: true
 |----------------------|---------|
 | `hysteria2` / `hy2` | Hysteria2 |
 | `tuic` | TUIC |
-| `trojan` | Trojan |
-| `vless` | VLESS |
+| `masque` | Masque |
 | `anytls` | AnyTLS |
-| 其余（vmess / shadowsocks / hysteria / socks5 / http 等） | 不归入任何分组 |
+| `vless` | VLESS |
+| 其余（vmess / shadowsocks / trojan / hysteria / socks5 / http 等） | 不归入任何分组 |
 
 > 不需要在节点名中添加特殊标记，脚本直接从 `proxy.type` 识别协议类型。
 
@@ -215,8 +215,8 @@ proxies:
     type: hysteria2
     server: example.com
     port: 443
-  - name: "🇯🇵 JP Trojan"
-    type: trojan
+  - name: "🇯🇵 JP Masque"
+    type: masque
     server: example.jp
     port: 443
 ```
@@ -237,7 +237,7 @@ node -e "
 
 ```
 MyClash/
-├── ShiroRikka.js    # 主脚本 (v4.16) — 按协议类型生成代理组
+├── ShiroRikka.js    # 主脚本 (v4.18) — 按协议类型生成代理组
 ├── README.md        # 本文档
 ├── AGENTS.md        # 开发规范与注意事项
 └── package.json     # 项目依赖
