@@ -32,15 +32,16 @@ GLOBAL (select, include-all)
 │
 ├─ 节点选择 (select)                  ← 主入口，含 DIRECT
 │   ├─ 自动选择 (url-test, hidden)
-│   │   ├─ Hysteria2 (select)
-│   │   ├─ TUIC (select)
-│   │   ├─ Masque (select)
-│   │   ├─ AnyTLS (select)
-│   │   └─ VLESS (select)
+│   │   ├─ Hysteria2 (select)        ← 默认=自动回退
+│   │   ├─ TUIC (select)             ← 同上
+│   │   ├─ Masque (select)           ← 同上
+│   │   ├─ AnyTLS (select)           ← 同上
+│   │   └─ VLESS (select)            ← 同上
 │   ├─ Hysteria2 (select)
+│   │   ├─ Hysteria2-自动回退 (fallback, hidden)  ← 选第一个可用（默认）
 │   │   ├─ Hysteria2-自动选择 (url-test, hidden)  ← 选最低延迟
 │   │   └─ Hysteria2协议的所有节点
-│   ├─ TUIC (select)                 ← 同上结构
+│   ├─ TUIC (select)                 ← 同上三段式结构
 │   ├─ Masque (select)               ← 同上
 │   ├─ AnyTLS (select)               ← 同上
 │   ├─ VLESS (select)                ← 同上
@@ -57,24 +58,36 @@ GLOBAL (select, include-all)
 |------|------|------|
 | **节点选择** | `select` | 主入口，包含全局自动选择 + 各协议组 + DIRECT |
 | **自动选择** | `url-test` (hidden) | 在所有协议组间选最低延迟 |
-|| **Hysteria2 / TUIC / Masque / AnyTLS / VLESS** | `select` | 单协议组，包含协议下所有节点 + 自动选择子策略 |
-| **{name}-自动选择** | `url-test` (hidden) | 该协议下选延迟最低节点（容差 100ms） |
+||| **Hysteria2 / TUIC / Masque / AnyTLS / VLESS** | `select` | 单协议组，默认=自动回退，含自动回退 + 自动选择 + 所有节点 |
+|| **{name}-自动回退** | `fallback` (hidden) | 按顺序选第一个可用节点，稳定优先（默认策略） |
+|| **{name}-自动选择** | `url-test` (hidden) | 该协议下选延迟最低节点（容差 10ms） |
 | **广告拦截 / 应用净化** | `select` | 选择 REJECT 拦截或 DIRECT 放行 |
 | **漏网之鱼** | `select` | 默认走节点选择，可手动切直连 |
 | **GLOBAL** | `select` | 顶层主控，包含所有分组 |
 
 ### 自动策略参数
 
-所有协议组均生成一个隐藏的自动选择策略组：
+每个协议组生成两个隐藏的自动策略组：
 
-**自动选择 (url-test, hidden)：**
+**自动回退 (fallback, hidden) — 默认策略：**
+```yaml
+type: fallback
+url: https://www.gstatic.com/generate_204
+interval: 300
+timeout: 3000
+lazy: false
+max-failed-times: 3
+hidden: true
+```
+
+**自动选择 (url-test, hidden) — 速度优先：**
 ```yaml
 type: url-test
 url: https://www.gstatic.com/generate_204
-interval: 600
+interval: 300
 timeout: 3000
-tolerance: 100      # 延迟容差 100ms
-lazy: false      # false=主动测速，无需流量触发
+tolerance: 10        # 延迟容差 10ms
+lazy: false
 max-failed-times: 3
 hidden: true
 ```
@@ -239,7 +252,7 @@ node -e "
 
 ```
 MyClash/
-├── ShiroRikka.js    # 主脚本 (v4.23) — 7 种协议分组，全局 300s 自动测速
+├── ShiroRikka.js    # 主脚本 (v4.26) — 7 种协议三段式分组：fallback + url-test + select
 ├── README.md        # 本文档
 ├── AGENTS.md        # 开发规范与注意事项
 └── package.json     # 项目依赖

@@ -1,4 +1,4 @@
-// v4.25 — VLESS 仅保留 REALITY 和 XHTTP 节点，去掉 encryption 条件
+// v4.26 — 每个协议组添加自动回退（fallback），设为默认选择
 function main(config) {
   // 参数校验
   if (!config || typeof config !== "object") {
@@ -85,10 +85,29 @@ function main(config) {
     hidden: true,
   }
 
+  // 自动回退（fallback, hidden）— 按顺序选第一个可用节点，更稳定
+  const fallbackBaseOption = {
+    type: "fallback",
+    url: "https://www.gstatic.com/generate_204",
+    interval: 300,
+    timeout: 3000,
+    lazy: false,
+    "max-failed-times": 3,
+    hidden: true,
+  }
+
   // ===== 构建协议分组 =====
   function createProtocolGroup(name, icon, proxies, extraOptions = {}) {
     const autoName = `${name}-自动选择`
+    const fallbackName = `${name}-自动回退`
     return [
+      {
+        name: fallbackName,
+        ...fallbackBaseOption,
+        ...extraOptions,
+        icon: `${CDN_QURE}Auto.png`,
+        proxies,
+      },
       {
         name: autoName,
         ...urlTestBaseOption,
@@ -100,7 +119,7 @@ function main(config) {
         name,
         icon,
         type: "select",
-        proxies: [autoName, ...proxies],
+        proxies: [fallbackName, autoName, ...proxies],
       },
     ]
   }

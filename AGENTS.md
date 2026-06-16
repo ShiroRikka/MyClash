@@ -32,9 +32,9 @@ module.exports = { main };
 
 ## 核心实现
 
-### 分组架构（v4.20）
+### 分组架构（v4.26）
 
-**协议级 select + url-test 自动选择**
+**协议级 fallback + url-test + select 三段式**
 
 - **协议分类**：遍历所有代理节点的 `type` 字段，通过 `switch/case` 分配到对应桶：
   - `hysteria2` / `hy2` → Hysteria2
@@ -46,13 +46,16 @@ module.exports = { main };
   - `mieru` → Mieru **（全部）**
     - 其余（vmess / shadowsocks / trojan / hysteria / socks5 / http / direct）不归入任何分组，**直接丢弃，不会出现在输出中**
 
-- **协议组**（Hysteria2 / TUIC / Masque / AnyTLS / VLESS / WireGuard / Mieru）：每个协议生成 `{name}-自动选择`（url-test, hidden）+ `{name}`（select）两个分组
+- **协议组**（Hysteria2 / TUIC / Masque / AnyTLS / VLESS / WireGuard / Mieru）：每个协议生成三个分组：
+  - `{name}-自动回退`（fallback, hidden）— 按顺序选第一个可用节点，稳定优先
+  - `{name}-自动选择`（url-test, hidden）— 测速选最低延迟，速度优先
+  - `{name}`（select）— 手动选择，默认指向 `{name}-自动回退`
 
 - **节点过滤**：`config.proxies` 在输出時只保留被归类的节点，未匹配的杂鱼节点被彻底删除。`GLOBAL` 組不再使用 `include-all`，避免意外引入未归类节点。
 
-### 自动选择策略
+### 自动选择（url-test）与自动回退（fallback）
 
-参考 [AIsouler/MyClash](https://github.com/AIsouler/MyClash) 的 url-test 参数改良：
+**url-test（自动选择）**：参考 [AIsouler/MyClash](https://github.com/AIsouler/MyClash) 的 url-test 参数改良，速度优先：
 
 ```js
 const urlTestBaseOption = {
@@ -60,12 +63,28 @@ const urlTestBaseOption = {
   url: "https://www.gstatic.com/generate_204",
   interval: 300,       // 每 300 秒测速一次
     timeout: 3000,       // 单次连 3 秒超时
-    tolerance: 100,      // 延迟容差 100ms
+    tolerance: 10,       // 延迟容差 10ms
     lazy: false,         // 主动测速——每 300 秒定期测速，无需流量触发
   "max-failed-times": 3, // 连续失败 3 次切换
   hidden: true,        // 隐藏，不在面板显示
 }
 ```
+
+**fallback（自动回退）**：按顺序检测，选第一个可用节点，稳定性优先，作为默认策略：
+
+```js
+const fallbackBaseOption = {
+  type: "fallback",
+  url: "https://www.gstatic.com/generate_204",
+  interval: 300,       // 每 300 秒检测一次
+    timeout: 3000,       // 单次连 3 秒超时
+    lazy: false,         // 主动检测
+  "max-failed-times": 3, // 连续失败 3 次切换
+  hidden: true,        // 隐藏，不在面板显示
+}
+```
+
+两种策略并存，用户可通过 select 组手动切换。
 
 ### 空分组容错
 
