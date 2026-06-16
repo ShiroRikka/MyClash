@@ -1,4 +1,4 @@
-// v4.26 — 每个协议组添加自动回退（fallback），设为默认选择
+// v4.27 — 移除协议组内部的 url-test（自动选择），仅保留自动回退
 function main(config) {
   // 参数校验
   if (!config || typeof config !== "object") {
@@ -98,7 +98,6 @@ function main(config) {
 
   // ===== 构建协议分组 =====
   function createProtocolGroup(name, icon, proxies, extraOptions = {}) {
-    const autoName = `${name}-自动选择`
     const fallbackName = `${name}-自动回退`
     return [
       {
@@ -109,17 +108,10 @@ function main(config) {
         proxies,
       },
       {
-        name: autoName,
-        ...urlTestBaseOption,
-        ...extraOptions,
-        icon: `${CDN_QURE}Auto.png`,
-        proxies,
-      },
-      {
         name,
         icon,
         type: "select",
-        proxies: [fallbackName, autoName, ...proxies],
+        proxies: [fallbackName, ...proxies],
       },
     ]
   }

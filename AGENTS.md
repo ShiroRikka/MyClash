@@ -41,14 +41,13 @@ module.exports = { main };
   - `tuic` → TUIC
   - `masque` → Masque
   - `anytls` → AnyTLS
-  - `vless` → VLESS **（有 `reality-opts` / `network: xhttp` 任一即可，不再接受仅 `encryption` 的节点）**
+  - `vless` → VLESS **（有 `reality-opts` / `network: xhttp` 任一即可，不再接受仅 encryption）**
   - `wireguard` → WireGuard **（全部）**
   - `mieru` → Mieru **（全部）**
     - 其余（vmess / shadowsocks / trojan / hysteria / socks5 / http / direct）不归入任何分组，**直接丢弃，不会出现在输出中**
 
-- **协议组**（Hysteria2 / TUIC / Masque / AnyTLS / VLESS / WireGuard / Mieru）：每个协议生成三个分组：
+- **协议组**（Hysteria2 / TUIC / Masque / AnyTLS / VLESS / WireGuard / Mieru）：每个协议生成 `{name}-自动回退`（fallback, hidden）+ `{name}`（select）两个分组。select 组默认选中 `{name}-自动回退`。
   - `{name}-自动回退`（fallback, hidden）— 按顺序选第一个可用节点，稳定优先
-  - `{name}-自动选择`（url-test, hidden）— 测速选最低延迟，速度优先
   - `{name}`（select）— 手动选择，默认指向 `{name}-自动回退`
 
 - **节点过滤**：`config.proxies` 在输出時只保留被归类的节点，未匹配的杂鱼节点被彻底删除。`GLOBAL` 組不再使用 `include-all`，避免意外引入未归类节点。

@@ -1,7 +1,7 @@
 # Mihomo (Clash Meta) 代理组生成脚本
 
-按代理协议类型自动分类，生成协议级 select 分组（含自动回退/自动选择）。  
-**当前版本：v4.19**
+按代理协议类型自动分类，生成协议级 select 分组（含自动回退）。  
+**当前版本：v4.27**
 
 ---
 
@@ -31,20 +31,21 @@ script:
 GLOBAL (select, include-all)
 │
 ├─ 节点选择 (select)                  ← 主入口，含 DIRECT
-│   ├─ 自动选择 (url-test, hidden)
-│   │   ├─ Hysteria2 (select)        ← 默认=自动回退
-│   │   ├─ TUIC (select)             ← 同上
-│   │   ├─ Masque (select)           ← 同上
-│   │   ├─ AnyTLS (select)           ← 同上
-│   │   └─ VLESS (select)            ← 同上
-│   ├─ Hysteria2 (select)
-│   │   ├─ Hysteria2-自动回退 (fallback, hidden)  ← 选第一个可用（默认）
-│   │   ├─ Hysteria2-自动选择 (url-test, hidden)  ← 选最低延迟
-│   │   └─ Hysteria2协议的所有节点
-│   ├─ TUIC (select)                 ← 同上三段式结构
-│   ├─ Masque (select)               ← 同上
-│   ├─ AnyTLS (select)               ← 同上
-│   ├─ VLESS (select)                ← 同上
+│   ├─ 自动选择 (url-test, hidden)     ← 全局自动选（协议组间）
+│   │   ├─ Hysteria2 (select)         ← 默认=自动回退
+│   │   ├─ TUIC (select)              ← 同上
+│   │   ├─ Masque (select)            ← 同上
+│   │   ├─ AnyTLS (select)            ← 同上
+│   │   ├─ VLESS (select)             ← 同上
+│   │   └─ …其他协议组…
+│   ├─ Hysteria2 (select)             ← 手动选协议组
+│   │   ├─ Hysteria2-自动回退 (fallback, hidden)
+│   │   └─ [该协议所有节点]
+│   ├─ TUIC (select)                  ← 同上
+│   ├─ Masque (select)                ← 同上
+│   ├─ AnyTLS (select)                ← 同上
+│   ├─ VLESS (select)                 ← 同上
+│   ├─ …其他协议组…
 │   └─ DIRECT
 │
 ├─ 漏网之鱼 (select)                  → 节点选择 / DIRECT
@@ -56,18 +57,17 @@ GLOBAL (select, include-all)
 
 | 分组 | 类型 | 说明 |
 |------|------|------|
-| **节点选择** | `select` | 主入口，包含全局自动选择 + 各协议组 + DIRECT |
-| **自动选择** | `url-test` (hidden) | 在所有协议组间选最低延迟 |
-||| **Hysteria2 / TUIC / Masque / AnyTLS / VLESS** | `select` | 单协议组，默认=自动回退，含自动回退 + 自动选择 + 所有节点 |
+|| **节点选择** | `select` | 主入口，包含全局自动选择 + 各协议组 + DIRECT |
+|| **自动选择** | `url-test` (hidden) | 在所有协议组间选最低延迟 |
+|| **Hysteria2 / TUIC / Masque / AnyTLS / VLESS** | `select` | 单协议组，默认=自动回退，含自动回退 + 所有节点 |
 || **{name}-自动回退** | `fallback` (hidden) | 按顺序选第一个可用节点，稳定优先（默认策略） |
-|| **{name}-自动选择** | `url-test` (hidden) | 该协议下选延迟最低节点（容差 10ms） |
 | **广告拦截 / 应用净化** | `select` | 选择 REJECT 拦截或 DIRECT 放行 |
 | **漏网之鱼** | `select` | 默认走节点选择，可手动切直连 |
 | **GLOBAL** | `select` | 顶层主控，包含所有分组 |
 
 ### 自动策略参数
 
-每个协议组生成两个隐藏的自动策略组：
+每个协议组生成一个隐藏的自动回退策略组（fallback），默认选中：
 
 **自动回退 (fallback, hidden) — 默认策略：**
 ```yaml
@@ -80,7 +80,7 @@ max-failed-times: 3
 hidden: true
 ```
 
-**自动选择 (url-test, hidden) — 速度优先：**
+**自动选择 (url-test, hidden) — 全局自动选（协议组间）：**
 ```yaml
 type: url-test
 url: https://www.gstatic.com/generate_204
