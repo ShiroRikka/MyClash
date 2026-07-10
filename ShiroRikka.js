@@ -1,4 +1,4 @@
-// v4.27 — 移除协议组内部的 url-test（自动选择），仅保留自动回退
+// v4.28 — 全面 fallback 化
 function main(config) {
   // 参数校验
   if (!config || typeof config !== "object") {
@@ -73,18 +73,6 @@ function main(config) {
 
   // ===== 策略组基础配置 =====
 
-  // 自动选择（url-test, hidden）
-  const urlTestBaseOption = {
-    type: "url-test",
-    url: "https://www.gstatic.com/generate_204",
-    interval: 300,
-    timeout: 3000,
-    tolerance: 10,
-    lazy: false,
-    "max-failed-times": 3,
-    hidden: true,
-  }
-
   // 自动回退（fallback, hidden）— 按顺序选第一个可用节点，更稳定
   const fallbackBaseOption = {
     type: "fallback",
@@ -157,11 +145,11 @@ function main(config) {
   const mainGroupNames = ["Hysteria2", "TUIC", "Masque", "AnyTLS", "VLESS", "WireGuard", "Mieru"]
     .filter(n => proxyGroups.some(g => g.name === n))
 
-  // 全局自动选择（url-test, hidden）— 在所有协议组间选最低延迟
+  // 自动回退（fallback, hidden）— 在所有协议组间按顺序选第一个可用节点
   if (mainGroupNames.length > 0) {
     proxyGroups.push({
-      name: "自动选择",
-      ...urlTestBaseOption,
+      name: "自动回退",
+      ...fallbackBaseOption,
       icon: `${CDN_QURE}Auto.png`,
       proxies: [...mainGroupNames],
     })
@@ -173,7 +161,7 @@ function main(config) {
     icon: `${CDN_QURE}Proxy.png`,
     type: "select",
     proxies: [
-      ...(mainGroupNames.length > 0 ? ["自动选择"] : []),
+      ...(mainGroupNames.length > 0 ? ["自动回退"] : []),
       ...mainGroupNames,
       "DIRECT",
     ],
@@ -201,16 +189,16 @@ function main(config) {
     proxies: ["节点选择", "DIRECT"],
   })
   // GLOBAL
-  proxyGroups.push({
-    name: "GLOBAL",
-    icon: `${CDN_QURE}Global.png`,
-    type: "select",
-    proxies: [
-      "节点选择", "漏网之鱼",
+    proxyGroups.push({
+      name: "GLOBAL",
+      icon: `${CDN_QURE}Global.png`,
+      type: "select",
+      proxies: [
+        "节点选择", "漏网之鱼",
       ...mainGroupNames,
-      "广告拦截", "应用净化",
-    ],
-  })
+        "广告拦截", "应用净化",
+      ],
+    })
 
   // 将「节点选择」移到最前面
   const ngIdx = proxyGroups.findIndex(g => g.name === "节点选择")
