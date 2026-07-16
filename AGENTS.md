@@ -32,9 +32,9 @@ module.exports = { main };
 
 ## 核心实现
 
-### 分组架构（v4.28）
+### 分组架构（v4.29）
 
-**纯 fallback + select 三段式（已全面移除 url-test）**
+**负载均衡 + fallback + select 三段式（load-balance 取代全局 fallback）**
 
 - **协议分类**：遍历所有代理节点的 `type` 字段，通过 `switch/case` 分配到对应桶：
   - `hysteria2` / `hy2` → Hysteria2
@@ -49,6 +49,9 @@ module.exports = { main };
 - **协议组**（Hysteria2 / TUIC / Masque / AnyTLS / VLESS / WireGuard / Mieru）：每个协议生成 `{name}-自动回退`（fallback, hidden）+ `{name}`（select）两个分组。select 组默认选中 `{name}-自动回退`。
   - `{name}-自动回退`（fallback, hidden）— 按顺序选第一个可用节点，稳定优先
   - `{name}`（select）— 手动选择，默认指向 `{name}-自动回退`
+
+- **全局负载均衡**：新增 `负载均衡`（load-balance, hidden）在协议组间均衡分配流量，采用 round-robin 策略。
+  - 取代原有的全局 `自动回退`（fallback），`节点选择` 默认选中 `负载均衡`
 
 - **节点过滤**：`config.proxies` 在输出時只保留被归类的节点，未匹配的杂鱼节点被彻底删除。`GLOBAL` 組不再使用 `include-all`，避免意外引入未归类节点。
 
@@ -69,7 +72,9 @@ const fallbackBaseOption = {
 ```
 
 - **协议组内部**：每个协议组有 `{name}-自动回退`（fallback）在组内节点间按顺序回退
-- **全局层面**：新增 `自动回退`（fallback，hidden）在协议组间按顺序回退，作为 `节点选择` 的默认选中项
+- **全局层面**：新增 `负载均衡`（load-balance，hidden）在协议组间轮询分发流量，作为 `节点选择` 的默认选中项
+  - 策略：`round-robin` — 将请求轮询分发到不同协议组
+  - 可选策略：`consistent-hashing`（相同目标地址→同一协议组）、`sticky-sessions`（相同来源+目标地址→同一协议组，缓存 10 分钟）
 
 ### 空分组容错
 

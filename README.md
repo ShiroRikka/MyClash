@@ -1,7 +1,7 @@
 # Mihomo (Clash Meta) 代理组生成脚本
 
 按代理协议类型自动分类，生成协议级 select 分组（含自动回退）。  
-**当前版本：v4.28**
+**当前版本：v4.29**
 
 ---
 
@@ -31,7 +31,7 @@ script:
 GLOBAL (select)
 │
 ├─ 节点选择 (select)                  ← 主入口，含 DIRECT
-│   ├─ 自动回退 (fallback, hidden)     ← 全局自动选（协议组间）
+│   ├─ 负载均衡 (load-balance, hidden)     ← 全局负载均衡（协议组间 round-robin）
 │   │   ├─ Hysteria2 (select)         ← 默认=自动回退
 │   │   ├─ TUIC (select)              ← 同上
 │   │   ├─ Masque (select)            ← 同上
@@ -57,10 +57,10 @@ GLOBAL (select)
 
 | 分组 | 类型 | 说明 |
 |------|------|------|
-||| **节点选择** | `select` | 主入口，包含自动回退 + 各协议组 + DIRECT |
-||| **自动回退** | `fallback` (hidden) | 在所有协议组间按顺序选第一个可用节点 |
-|| **Hysteria2 / TUIC / Masque / AnyTLS / VLESS** | `select` | 单协议组，默认=自动回退，含自动回退 + 所有节点 |
-|| **{name}-自动回退** | `fallback` (hidden) | 按顺序选第一个可用节点，稳定优先（默认策略） |
+| **节点选择** | `select` | 主入口，包含负载均衡 + 各协议组 + DIRECT |
+| **负载均衡** | `load-balance` (hidden) | 在协议组间 round-robin 轮询分发流量 |
+| **Hysteria2 / TUIC / Masque / AnyTLS / VLESS** | `select` | 单协议组，默认=自动回退，含自动回退 + 所有节点 |
+| **{name}-自动回退** | `fallback` (hidden) | 按顺序选第一个可用节点，稳定优先（默认策略） |
 | **广告拦截 / 应用净化** | `select` | 选择 REJECT 拦截或 DIRECT 放行 |
 | **漏网之鱼** | `select` | 默认走节点选择，可手动切直连 |
 | **GLOBAL** | `select` | 顶层主控，包含所有分组 |
@@ -69,7 +69,7 @@ GLOBAL (select)
 
 每个协议组生成一个隐藏的自动回退策略组（fallback），默认选中：
 
-**自动回退 (fallback, hidden) — 默认策略：**
+**自动回退 (fallback, hidden) — 协议组内默认策略：**
 ```yaml
 type: fallback
 url: https://www.gstatic.com/generate_204
@@ -80,16 +80,20 @@ max-failed-times: 3
 hidden: true
 ```
 
-**自动回退 (fallback, hidden) — 全局自动选（协议组间）：**
+**负载均衡 (load-balance, hidden) — 全局默认策略（协议组间 round-robin）：**
 ```yaml
-type: fallback
+type: load-balance
 url: https://www.gstatic.com/generate_204
 interval: 300
 timeout: 3000
 lazy: false
-max-failed-times: 3
+strategy: round-robin
 hidden: true
 ```
+
+支持的其他负载均衡策略：
+- `consistent-hashing` — 相同目标地址始终分配到同一协议组
+- `sticky-sessions` — 相同来源地址+目标地址分配到同一协议组，缓存 10 分钟
 
 ---
 
@@ -251,7 +255,7 @@ node -e "
 
 ```
 MyClash/
-├── ShiroRikka.js    # 主脚本 (v4.28) — 7 种协议纯 fallback + select 分组
+├── ShiroRikka.js    # 主脚本 (v4.29) — 7 种协议 load-balance + fallback + select 分组
 ├── README.md        # 本文档
 ├── AGENTS.md        # 开发规范与注意事项
 └── package.json     # 项目依赖

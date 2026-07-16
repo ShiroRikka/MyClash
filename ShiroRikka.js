@@ -1,4 +1,4 @@
-// v4.28 — 全面 fallback 化
+// v4.29 — 全面负载均衡化（load-balance 取代全局 fallback）
 function main(config) {
   // 参数校验
   if (!config || typeof config !== "object") {
@@ -145,11 +145,17 @@ function main(config) {
   const mainGroupNames = ["Hysteria2", "TUIC", "Masque", "AnyTLS", "VLESS", "WireGuard", "Mieru"]
     .filter(n => proxyGroups.some(g => g.name === n))
 
-  // 自动回退（fallback, hidden）— 在所有协议组间按顺序选第一个可用节点
+  // 负载均衡（load-balance, hidden）— 在协议组间均衡分配流量
   if (mainGroupNames.length > 0) {
     proxyGroups.push({
-      name: "自动回退",
-      ...fallbackBaseOption,
+      name: "负载均衡",
+      type: "load-balance",
+      url: "https://www.gstatic.com/generate_204",
+      interval: 300,
+      timeout: 3000,
+      lazy: false,
+      strategy: "round-robin",
+      hidden: true,
       icon: `${CDN_QURE}Auto.png`,
       proxies: [...mainGroupNames],
     })
@@ -161,7 +167,7 @@ function main(config) {
     icon: `${CDN_QURE}Proxy.png`,
     type: "select",
     proxies: [
-      ...(mainGroupNames.length > 0 ? ["自动回退"] : []),
+      ...(mainGroupNames.length > 0 ? ["负载均衡"] : []),
       ...mainGroupNames,
       "DIRECT",
     ],
@@ -189,16 +195,16 @@ function main(config) {
     proxies: ["节点选择", "DIRECT"],
   })
   // GLOBAL
-    proxyGroups.push({
-      name: "GLOBAL",
-      icon: `${CDN_QURE}Global.png`,
-      type: "select",
-      proxies: [
-        "节点选择", "漏网之鱼",
+  proxyGroups.push({
+    name: "GLOBAL",
+    icon: `${CDN_QURE}Global.png`,
+    type: "select",
+    proxies: [
+      "节点选择", "漏网之鱼",
       ...mainGroupNames,
-        "广告拦截", "应用净化",
-      ],
-    })
+      "广告拦截", "应用净化",
+    ],
+  })
 
   // 将「节点选择」移到最前面
   const ngIdx = proxyGroups.findIndex(g => g.name === "节点选择")
