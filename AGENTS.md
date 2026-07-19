@@ -100,25 +100,17 @@ const fallbackBaseOption = {
 
 使用 Loyalsoldier/v2ray-rules-dat 的 geosite.dat/geoip.dat，通过 GEOSITE/GEOIP 内置规则直接引用，无需 RULE-SET 和 rule-providers。
 
-**白名单模式规则顺序**（注意：`@cn` 规则必须在 `geolocation-!cn` 之前）：
+**白名单模式规则顺序**：
 
 ```yaml
 # 广告拦截
 - GEOSITE,category-ads-all,REJECT
 # 私有域名直连
 - GEOSITE,private,DIRECT
-# Apple 可直连域名（Loyalsoldier 特有，apple-cn）
-- GEOSITE,apple-cn,DIRECT
-# Google 可直连域名（Loyalsoldier 特有，google-cn）
-- GEOSITE,google-cn,DIRECT
-# 国区游戏直连 @cn（Steam 等国内 CDN）
-- GEOSITE,category-games@cn,DIRECT
-# 国内 TLD 直连
-- GEOSITE,tld-cn,DIRECT
+# 国内域名直连（Loyalsoldier 增强版 cn，含 apple-cn/google-cn/tld-cn 等）
+- GEOSITE,cn,DIRECT
 # 国外域名走代理（含 GFW、Google、Telegram 等）
 - GEOSITE,geolocation-!cn,节点选择
-# 国内域名直连（Loyalsoldier 增强版 cn）
-- GEOSITE,cn,DIRECT
 # IP 规则
 - GEOIP,private,DIRECT,no-resolve
 - GEOIP,cn,DIRECT,no-resolve
@@ -127,7 +119,7 @@ const fallbackBaseOption = {
 - MATCH,漏网之鱼
 ```
 
-- 去掉了 `gfw` / `google` / `telegram` 单独分组，统一由 `geolocation-!cn` 覆盖
+- `cn` 本身已包含 apple-cn/google-cn/tld-cn/category-games@cn 等，无需再单独拆分
 - 兜底从 `MATCH,节点选择` 改为 `MATCH,漏网之鱼`，更灵活
 
 **DNS 配置变化**：

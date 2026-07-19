@@ -131,23 +131,11 @@ GEOSITE,category-ads-all,REJECT
 # 私有域名直连
 GEOSITE,private,DIRECT
 
-# Apple 可直连域名（Loyalsoldier 特有）
-GEOSITE,apple-cn,DIRECT
-
-# Google 可直连域名（Loyalsoldier 特有）
-GEOSITE,google-cn,DIRECT
-
-# 国区游戏直连 @cn（Steam 等国内 CDN）
-GEOSITE,category-games@cn,DIRECT
-
-# 国内 TLD 直连
-GEOSITE,tld-cn,DIRECT
+# 国内域名直连（Loyalsoldier 增强版 cn，含 apple-cn/google-cn/tld-cn 等）
+GEOSITE,cn,DIRECT
 
 # 国外域名走代理（含 GFW、Google、Telegram 等）
 GEOSITE,geolocation-!cn,节点选择
-
-# 国内域名直连（Loyalsoldier 增强版 cn）
-GEOSITE,cn,DIRECT
 
 # IP 规则
 GEOIP,private,DIRECT,no-resolve
@@ -164,12 +152,8 @@ MATCH,漏网之鱼
 |------|------|------|------|
 | `category-ads-all` | geosite | 广告/追踪域名（含 EasyList + AdGuard + Peter Lowe 等多源合并） | Loyalsoldier 增强 |
 | `private` | geosite | 内网/私有域名 | 上游 v2fly |
-| `apple-cn` | geosite | Apple 国内可直连域名 | Loyalsoldier 特有 |
-| `google-cn` | geosite | Google 国内可直连域名 | Loyalsoldier 特有 |
-| `category-games@cn` | geosite | 国区游戏 CDN 直连（Steam/EA/Blizzard 等） | 上游 v2fly + `@cn` 属性 |
-| `tld-cn` | geosite | `.cn` 等中国 TLD 域名 | 上游 v2fly |
+| `cn` | geosite | 国内域名（含 apple-cn/google-cn/tld-cn/category-games@cn 等） | Loyalsoldier 增强 |
 | `geolocation-!cn` | geosite | 非中国域名（含 GFW/Google/Telegram 等） | 上游 v2fly |
-| `cn` | geosite | 国内域名（Loyalsoldier 增强版，含 dnsmasq-china-list） | Loyalsoldier 增强 |
 | `geoip:private` | geoip | 内网 IP 段 | 上游 |
 | `geoip:cn` | geoip | 中国 IP 段（IPv4: china-operator-ip, IPv6: china-operator-ip） | Loyalsoldier 增强 |
 | `geoip:telegram` | geoip | Telegram IP 段 | Loyalsoldier 增强 |

@@ -267,18 +267,10 @@ function main(config) {
     "GEOSITE,category-ads-all,REJECT",
     // 私有域名直连
     "GEOSITE,private,DIRECT",
-    // Apple 可直连域名（需在 geolocation-!cn 之前）
-    "GEOSITE,apple-cn,DIRECT",
-    // Google 可直连域名（需在 geolocation-!cn 之前）
-    "GEOSITE,google-cn,DIRECT",
-    // 国区游戏直连 @cn（需在 geolocation-!cn 之前）
-    "GEOSITE,category-games@cn,DIRECT",
-    // 国内 TLD 直连
-    "GEOSITE,tld-cn,DIRECT",
-    // 国外域名走代理
-    "GEOSITE,geolocation-!cn,节点选择",
     // 国内域名直连
     "GEOSITE,cn,DIRECT",
+    // 国外域名走代理
+    "GEOSITE,geolocation-!cn,节点选择",
     // IP 规则
     "GEOIP,private,DIRECT,no-resolve",
     "GEOIP,cn,DIRECT,no-resolve",
