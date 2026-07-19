@@ -1,4 +1,4 @@
-// v4.29 — 全面负载均衡化（load-balance 取代全局 fallback）
+// v4.30 — GEOSITE/GEOIP 内置规则（移除 rule-providers）
 function main(config) {
   // 参数校验
   if (!config || typeof config !== "object") {
@@ -70,6 +70,12 @@ function main(config) {
 
   // 用归类后的节点列表覆盖原始 proxies，杂鱼全部清除
   config.proxies = matchedProxies
+
+  config["geodata-mode"] = true
+  config["geox-url"] = {
+    geoip: "https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geoip.dat",
+    geosite: "https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat",
+  }
 
   // ===== 策略组基础配置 =====
 
@@ -216,17 +222,6 @@ function main(config) {
   config["proxy-groups"] = proxyGroups
 
   // ===== DNS 配置 =====
-  const metaCDN = "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta"
-
-  const chinaDNS = [
-    "https://dns.alidns.com/dns-query#DIRECT",
-    "https://doh.pub/dns-query#DIRECT",
-  ]
-  const foreignDNS = [
-    "https://dns.cloudflare.com/dns-query#节点选择",
-    "https://dns.google/dns-query#节点选择",
-  ]
-
   config.dns = {
     enable: true,
     ipv6: true,
@@ -237,14 +232,20 @@ function main(config) {
     "enhanced-mode": "fake-ip",
     "fake-ip-range": "198.18.0.1/16",
     "fake-ip-range-v6": "fc00::/18",
-    "fake-ip-filter": ["rule-set:private"],
-    "proxy-server-nameserver": chinaDNS,
+    "fake-ip-filter": [
+      "geosite:connectivity-check",
+      "geosite:private",
+    ],
+    "proxy-server-nameserver": ["https://dns.alidns.com/dns-query#DIRECT", "https://doh.pub/dns-query#DIRECT"],
     "default-nameserver": ["223.5.5.5", "119.29.29.29"],
-    nameserver: foreignDNS,
-    "nameserver-policy": {
-      "*": "system",
-    },
-    "direct-nameserver": ["system", "223.5.5.5", "119.29.29.29"],
+    nameserver: [
+      "https://dns.cloudflare.com/dns-query#节点选择",
+      "https://dns.google/dns-query#节点选择",
+    ],
+    "direct-nameserver": [
+      "https://dns.alidns.com/dns-query#DIRECT",
+      "https://doh.pub/dns-query#DIRECT",
+    ],
   }
 
   // ===== Hosts =====
@@ -258,92 +259,32 @@ function main(config) {
     "+.mcdn.bilivideo.cn": ["0.0.0.0"],
   }
 
-  // ===== Rule Providers（仅 MetaCubeX 官方 .mrs 源）=====
-  const ruleProviderCommon = {
-    type: "http",
-    interval: 86400,
-    format: "mrs",
-  }
-
-  config["rule-providers"] = {
-    // --- geosite（域名分类）---
-    "category-ads-all": {
-      ...ruleProviderCommon,
-      behavior: "domain",
-      url: `${metaCDN}/geo/geosite/category-ads-all.mrs`,
-      path: "./ruleset/category-ads-all.mrs",
-    },
-    "private": {
-      ...ruleProviderCommon,
-      behavior: "domain",
-      url: `${metaCDN}/geo/geosite/private.mrs`,
-      path: "./ruleset/private.mrs",
-    },
-    "cn": {
-      ...ruleProviderCommon,
-      behavior: "domain",
-      url: `${metaCDN}/geo/geosite/cn.mrs`,
-      path: "./ruleset/cn.mrs",
-    },
-    "gfw": {
-      ...ruleProviderCommon,
-      behavior: "domain",
-      url: `${metaCDN}/geo/geosite/gfw.mrs`,
-      path: "./ruleset/gfw.mrs",
-    },
-    "google": {
-      ...ruleProviderCommon,
-      behavior: "domain",
-      url: `${metaCDN}/geo/geosite/google.mrs`,
-      path: "./ruleset/google.mrs",
-    },
-    "telegram": {
-      ...ruleProviderCommon,
-      behavior: "domain",
-      url: `${metaCDN}/geo/geosite/telegram.mrs`,
-      path: "./ruleset/telegram.mrs",
-    },
-    // --- geoip（IP 分类）---
-    "geoip-private": {
-      ...ruleProviderCommon,
-      behavior: "ipcidr",
-      url: `${metaCDN}/geo/geoip/private.mrs`,
-      path: "./ruleset/geoip-private.mrs",
-    },
-    "geoip-cn": {
-      ...ruleProviderCommon,
-      behavior: "ipcidr",
-      url: `${metaCDN}/geo/geoip/cn.mrs`,
-      path: "./ruleset/geoip-cn.mrs",
-    },
-    "geoip-telegram": {
-      ...ruleProviderCommon,
-      behavior: "ipcidr",
-      url: `${metaCDN}/geo/geoip/telegram.mrs`,
-      path: "./ruleset/geoip-telegram.mrs",
-    },
-  }
+  // 数据源：https://github.com/Loyalsoldier/v2ray-rules-dat
 
   // ===== Rules =====
   config["rules"] = [
     // 广告拦截（最优先）
-    "RULE-SET,category-ads-all,REJECT",
-    // 内网域名直连
-    "RULE-SET,private,DIRECT",
+    "GEOSITE,category-ads-all,REJECT",
+    // 私有域名直连
+    "GEOSITE,private,DIRECT",
+    // Apple 可直连域名（需在 geolocation-!cn 之前）
+    "GEOSITE,apple-cn,DIRECT",
+    // Google 可直连域名（需在 geolocation-!cn 之前）
+    "GEOSITE,google-cn,DIRECT",
+    // 国区游戏直连 @cn（需在 geolocation-!cn 之前）
+    "GEOSITE,category-games@cn,DIRECT",
+    // 国内 TLD 直连
+    "GEOSITE,tld-cn,DIRECT",
+    // 国外域名走代理
+    "GEOSITE,geolocation-!cn,节点选择",
     // 国内域名直连
-    "RULE-SET,cn,DIRECT",
-    // 被墙域名走代理
-    "RULE-SET,gfw,节点选择",
-    // Google 走代理
-    "RULE-SET,google,节点选择",
-    // Telegram 走代理
-    "RULE-SET,telegram,节点选择",
+    "GEOSITE,cn,DIRECT",
     // IP 规则
-    "RULE-SET,geoip-private,DIRECT,no-resolve",
-    "RULE-SET,geoip-cn,DIRECT,no-resolve",
-    "RULE-SET,geoip-telegram,节点选择,no-resolve",
+    "GEOIP,private,DIRECT,no-resolve",
+    "GEOIP,cn,DIRECT,no-resolve",
+    "GEOIP,telegram,节点选择,no-resolve",
     // 兜底
-    "MATCH,节点选择",
+    "MATCH,漏网之鱼",
   ]
 
   return config

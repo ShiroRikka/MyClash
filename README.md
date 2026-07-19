@@ -1,7 +1,7 @@
 # Mihomo (Clash Meta) 代理组生成脚本
 
 按代理协议类型自动分类，生成协议级 select 分组（含自动回退）。  
-**当前版本：v4.29**
+**当前版本：v4.30**
 
 ---
 
@@ -122,53 +122,60 @@ hidden: true
 
 ## 路由规则
 
-脚本仅使用 **MetaCubeX 官方 `.mrs`** 规则源：
+脚本使用 **Loyalsoldier/v2ray-rules-dat** 的 geosite.dat/geoip.dat，通过 GEOSITE/GEOIP 内置规则直接引用（无需 RULE-SET 和 rule-providers）：
 
 ```yaml
 # 广告拦截（最优先）
-RULE-SET,category-ads-all,REJECT
+GEOSITE,category-ads-all,REJECT
 
-# 内网域名直连
-RULE-SET,private,DIRECT
+# 私有域名直连
+GEOSITE,private,DIRECT
 
-# 国内域名直连
-RULE-SET,cn,DIRECT
+# Apple 可直连域名（Loyalsoldier 特有）
+GEOSITE,apple-cn,DIRECT
 
-# 被墙域名走代理
-RULE-SET,gfw,节点选择
+# Google 可直连域名（Loyalsoldier 特有）
+GEOSITE,google-cn,DIRECT
 
-# Google 走代理
-RULE-SET,google,节点选择
+# 国区游戏直连 @cn（Steam 等国内 CDN）
+GEOSITE,category-games@cn,DIRECT
 
-# Telegram 走代理
-RULE-SET,telegram,节点选择
+# 国内 TLD 直连
+GEOSITE,tld-cn,DIRECT
+
+# 国外域名走代理（含 GFW、Google、Telegram 等）
+GEOSITE,geolocation-!cn,节点选择
+
+# 国内域名直连（Loyalsoldier 增强版 cn）
+GEOSITE,cn,DIRECT
 
 # IP 规则
-RULE-SET,geoip-private,DIRECT,no-resolve
-RULE-SET,geoip-cn,DIRECT,no-resolve
-RULE-SET,geoip-telegram,节点选择,no-resolve
+GEOIP,private,DIRECT,no-resolve
+GEOIP,cn,DIRECT,no-resolve
+GEOIP,telegram,节点选择,no-resolve
 
-# 兜底 → 节点选择（用户可在面板切换走代理或直连）
-MATCH,节点选择
+# 兜底 → 漏网之鱼（用户可在面板切换走代理或直连）
+MATCH,漏网之鱼
 ```
 
-### 规则源说明
+### 规则说明
 
-所有规则源来自 [MetaCubeX/meta-rules-dat](https://github.com/MetaCubeX/meta-rules-dat)，使用 `.mrs` 编译格式：
+| 规则 | 类型 | 用途 | 来源 |
+|------|------|------|------|
+| `category-ads-all` | geosite | 广告/追踪域名（含 EasyList + AdGuard + Peter Lowe 等多源合并） | Loyalsoldier 增强 |
+| `private` | geosite | 内网/私有域名 | 上游 v2fly |
+| `apple-cn` | geosite | Apple 国内可直连域名 | Loyalsoldier 特有 |
+| `google-cn` | geosite | Google 国内可直连域名 | Loyalsoldier 特有 |
+| `category-games@cn` | geosite | 国区游戏 CDN 直连（Steam/EA/Blizzard 等） | 上游 v2fly + `@cn` 属性 |
+| `tld-cn` | geosite | `.cn` 等中国 TLD 域名 | 上游 v2fly |
+| `geolocation-!cn` | geosite | 非中国域名（含 GFW/Google/Telegram 等） | 上游 v2fly |
+| `cn` | geosite | 国内域名（Loyalsoldier 增强版，含 dnsmasq-china-list） | Loyalsoldier 增强 |
+| `geoip:private` | geoip | 内网 IP 段 | 上游 |
+| `geoip:cn` | geoip | 中国 IP 段（IPv4: china-operator-ip, IPv6: china-operator-ip） | Loyalsoldier 增强 |
+| `geoip:telegram` | geoip | Telegram IP 段 | Loyalsoldier 增强 |
 
-| 规则集 | 类型 | 用途 |
-|--------|------|------|
-| `category-ads-all` | geosite | 广告/追踪域名 |
-| `private` | geosite | 内网/私有域名 |
-| `cn` | geosite | 国内域名 |
-| `gfw` | geosite | 被墙域名 |
-| `google` | geosite | Google 服务 |
-| `telegram` | geosite | Telegram |
-| `geoip-private` | geoip | 内网 IP 段 |
-| `geoip-cn` | geoip | 中国 IP 段 |
-| `geoip-telegram` | geoip | Telegram IP 段 |
-
-CDN: `https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/`
+> 数据源：`https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat`
+> 自动构建：GitHub Actions 每天北京时间 06:00 更新
 
 ---
 
@@ -183,7 +190,9 @@ dns:
   enhanced-mode: fake-ip
   fake-ip-range: 198.18.0.1/16
   fake-ip-range-v6: fc00::/18
-  fake-ip-filter: ["rule-set:private"]
+  fake-ip-filter:
+    - "geosite:connectivity-check"  # 覆盖所有平台连通性检测（Windows/Android/Apple/KDE 等）
+    - "geosite:private"             # 私有域名放行
 
   # 代理服务器 DNS（走 DIRECT 避免死循环）
   proxy-server-nameserver:
@@ -197,11 +206,10 @@ dns:
     - https://dns.cloudflare.com/dns-query#节点选择
     - https://dns.google/dns-query#节点选择
 
-  nameserver-policy:
-    "*": system  # 未匹配走系统 DNS
-
-  # 直连流量 DNS
-  direct-nameserver: [system, 223.5.5.5, 119.29.29.29]
+  # 直连流量 DNS（使用纯净 DoH，减少劫持）
+  direct-nameserver:
+    - https://dns.alidns.com/dns-query#DIRECT
+    - https://doh.pub/dns-query#DIRECT
 ```
 
 ### Hosts 映射
@@ -255,7 +263,7 @@ node -e "
 
 ```
 MyClash/
-├── ShiroRikka.js    # 主脚本 (v4.29) — 7 种协议 load-balance + fallback + select 分组
+├── ShiroRikka.js    # 主脚本 (v4.30) — GEOSITE/GEOIP 内置规则 + Loyalsoldier 数据源
 ├── README.md        # 本文档
 ├── AGENTS.md        # 开发规范与注意事项
 └── package.json     # 项目依赖
