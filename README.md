@@ -49,8 +49,6 @@ GLOBAL (select)
 │   └─ DIRECT
 │
 ├─ 漏网之鱼 (select)                  → 节点选择 / DIRECT
-├─ 广告拦截 (select)                  → REJECT / DIRECT
-└─ 应用净化 (select)                  → REJECT / DIRECT
 ```
 
 ### 分组说明
@@ -61,7 +59,6 @@ GLOBAL (select)
 | **负载均衡** | `load-balance` (hidden) | 在协议组间 round-robin 轮询分发流量 |
 | **Hysteria2 / TUIC / Masque / AnyTLS / VLESS** | `select` | 单协议组，默认=自动回退，含自动回退 + 所有节点 |
 | **{name}-自动回退** | `fallback` (hidden) | 按顺序选第一个可用节点，稳定优先（默认策略） |
-| **广告拦截 / 应用净化** | `select` | 选择 REJECT 拦截或 DIRECT 放行 |
 | **漏网之鱼** | `select` | 默认走节点选择，可手动切直连 |
 | **GLOBAL** | `select` | 顶层主控，包含所有分组 |
 

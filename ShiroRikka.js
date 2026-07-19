@@ -179,20 +179,6 @@ function main(config) {
     ],
   })
 
-  // 广告拦截
-  proxyGroups.push({
-    name: "广告拦截",
-    icon: `${CDN_QURE}AdBlack.png`,
-    type: "select",
-    proxies: ["REJECT", "DIRECT"],
-  })
-  // 应用净化
-  proxyGroups.push({
-    name: "应用净化",
-    icon: `${CDN_QURE}Hijacking.png`,
-    type: "select",
-    proxies: ["REJECT", "DIRECT"],
-  })
   // 漏网之鱼
   proxyGroups.push({
     name: "漏网之鱼",
@@ -207,8 +193,7 @@ function main(config) {
     type: "select",
     proxies: [
       "节点选择", "漏网之鱼",
-      ...mainGroupNames,
-      "广告拦截", "应用净化",
+            ...mainGroupNames,
     ],
   })
 
