@@ -1,4 +1,4 @@
-// v4.30 — GEOSITE/GEOIP 内置规则（移除 rule-providers）
+// v4.31 — 修正 DNS 参数名、补充 sniffer/unified-delay/fallback
 function main(config) {
   // 参数校验
   if (!config || typeof config !== "object") {
@@ -72,6 +72,7 @@ function main(config) {
   config.proxies = matchedProxies
 
   config["geodata-mode"] = true
+  config["unified-delay"] = true
   config["geox-url"] = {
     geoip: "https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geoip.dat",
     geosite: "https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat",
@@ -210,13 +211,13 @@ function main(config) {
   config.dns = {
     enable: true,
     ipv6: true,
-    listen: ":1053",
+    listen: "0.0.0.0:1053",
     "cache-algorithm": "arc",
     "use-hosts": true,
     "use-system-hosts": true,
     "enhanced-mode": "fake-ip",
     "fake-ip-range": "198.18.0.1/16",
-    "fake-ip-range-v6": "fc00::/18",
+    "fake-ip-range6": "fc00::/18",
     "fake-ip-filter": [
       "geosite:connectivity-check",
       "geosite:private",
@@ -227,6 +228,15 @@ function main(config) {
       "https://dns.cloudflare.com/dns-query#节点选择",
       "https://dns.google/dns-query#节点选择",
     ],
+    fallback: [
+      "https://dns.alidns.com/dns-query",
+      "https://doh.pub/dns-query",
+    ],
+    "fallback-filter": {
+      geoip: true,
+      "geoip-code": "CN",
+      geosite: ["gfw"],
+    },
     "direct-nameserver": [
       "https://dns.alidns.com/dns-query#DIRECT",
       "https://doh.pub/dns-query#DIRECT",
@@ -245,6 +255,30 @@ function main(config) {
   }
 
   // 数据源：https://github.com/Loyalsoldier/v2ray-rules-dat
+
+  // ===== Sniffer 配置 =====
+  config.sniffer = {
+    enable: true,
+    "force-dns-mapping": true,
+    "parse-pure-ip": true,
+    "override-destination": true,
+    sniff: {
+      HTTP: {
+        ports: [80, "8080-8880"],
+        "override-destination": true,
+      },
+      TLS: {
+        ports: [443, 8443],
+      },
+      QUIC: {
+        ports: [443, 8443],
+      },
+    },
+    "skip-domain": [
+      "Mijia Cloud",
+      "+.push.apple.com",
+    ],
+  }
 
   // ===== Rules =====
   config["rules"] = [
