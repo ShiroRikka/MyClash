@@ -1,4 +1,4 @@
-// v4.31 — 修正 DNS 参数名、补充 sniffer/unified-delay/fallback
+// v4.32 — 交换 DNS fallback 逻辑、补充 tcp-concurrent、修正 geox-url CDN
 function main(config) {
   // 参数校验
   if (!config || typeof config !== "object") {
@@ -73,9 +73,10 @@ function main(config) {
 
   config["geodata-mode"] = true
   config["unified-delay"] = true
+  config["tcp-concurrent"] = true
   config["geox-url"] = {
-    geoip: "https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geoip.dat",
-    geosite: "https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat",
+    geoip: "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geoip.dat",
+    geosite: "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geosite.dat",
   }
 
   // ===== 策略组基础配置 =====
@@ -225,12 +226,12 @@ function main(config) {
     "proxy-server-nameserver": ["https://dns.alidns.com/dns-query#DIRECT", "https://doh.pub/dns-query#DIRECT"],
     "default-nameserver": ["223.5.5.5", "119.29.29.29"],
     nameserver: [
-      "https://dns.cloudflare.com/dns-query#节点选择",
-      "https://dns.google/dns-query#节点选择",
-    ],
-    fallback: [
       "https://dns.alidns.com/dns-query",
       "https://doh.pub/dns-query",
+    ],
+    fallback: [
+      "https://dns.cloudflare.com/dns-query#节点选择",
+      "https://dns.google/dns-query#节点选择",
     ],
     "fallback-filter": {
       geoip: true,
@@ -254,7 +255,7 @@ function main(config) {
     "+.mcdn.bilivideo.cn": ["0.0.0.0"],
   }
 
-  // 数据源：https://github.com/Loyalsoldier/v2ray-rules-dat
+  // 数据源：https://github.com/MetaCubeX/meta-rules-dat
 
   // ===== Sniffer 配置 =====
   config.sniffer = {

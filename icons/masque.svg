@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <defs>
+    <linearGradient id="masque-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF6B35"/>
+      <stop offset="100%" stop-color="#E55A2B"/>
+    </linearGradient>
+  </defs>
+  <!-- Tunnel/network background -->
+  <path d="M100 15 L180 60 L180 140 L100 185 L20 140 L20 60 Z" fill="url(#masque-grad)" opacity="0.08"/>
+  <path d="M100 30 L165 65 L165 135 L100 170 L35 135 L35 65 Z" fill="url(#masque-grad)" opacity="0.10"/>
+  <!-- Stylized M letter (MASQUE) with tunnel arch -->
+  <path d="M50 55 L50 145 L70 145 L70 95 L95 120 L130 95 L130 145 L150 145 L150 55 L130 55 L100 85 L70 55 Z" fill="#FF6B35"/>
+  <!-- Tunnel/QUIC wave hint -->
+  <path d="M155 90 Q170 100 155 110" stroke="#FF6B35" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.5"/>
+  <path d="M160 95 Q170 100 160 105" stroke="#FF6B35" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.5"/>
+</svg>
