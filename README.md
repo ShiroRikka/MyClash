@@ -1,7 +1,7 @@
 # Mihomo (Clash Meta) 代理组生成脚本
 
 按代理协议类型自动分类，生成协议级 select 分组（含自动回退）。  
-**当前版本：v4.30**
+**当前版本：v4.35**
 
 ---
 
@@ -155,8 +155,8 @@ MATCH,漏网之鱼
 | `geoip:cn` | geoip | 中国 IP 段（IPv4: china-operator-ip, IPv6: china-operator-ip） | Loyalsoldier 增强 |
 | `geoip:telegram` | geoip | Telegram IP 段 | Loyalsoldier 增强 |
 
-> 数据源：`https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat`
-> 自动构建：GitHub Actions 每天北京时间 06:00 更新
+> 数据源：`https://github.com/MetaCubeX/meta-rules-dat`
+> 自动构建：GitHub Actions 每天北京时间 06:00 更新（MetaCubeX/meta-rules-dat）
 
 ---
 
@@ -170,7 +170,7 @@ dns:
   cache-algorithm: arc
   enhanced-mode: fake-ip
   fake-ip-range: 198.18.0.1/16
-  fake-ip-range-v6: fc00::/18
+  fake-ip-range6: fdfe:dcba:9876::1/64
   fake-ip-filter:
     - "geosite:connectivity-check"  # 覆盖所有平台连通性检测（Windows/Android/Apple/KDE 等）
     - "geosite:private"             # 私有域名放行
@@ -182,10 +182,30 @@ dns:
 
   default-nameserver: [223.5.5.5, 119.29.29.29]
 
-  # 普通域名 DNS（走代理避免 DNS 污染）
+  # 国内域名 DNS（直连，纯净快速）
   nameserver:
+    - https://dns.alidns.com/dns-query
+    - https://doh.pub/dns-query
+
+  # GFW 域名 DNS（通过代理防污染）
+  nameserver-policy:
+    "geosite:gfw":
+      - https://dns.cloudflare.com/dns-query#节点选择
+      - https://dns.google/dns-query#节点选择
+
+  # 非国内域名 DNS（通过代理防污染）
+  fallback:
     - https://dns.cloudflare.com/dns-query#节点选择
     - https://dns.google/dns-query#节点选择
+
+  fallback-filter:
+    geoip: true
+    geoip-code: CN
+    ipcidr:
+      - 240.0.0.0/4      # 组播地址
+      - 0.0.0.0/32       # 非法地址
+      - 127.0.0.0/8      # 回环地址
+      - 100.64.0.0/10    # CGNAT 地址
 
   # 直连流量 DNS（使用纯净 DoH，减少劫持）
   direct-nameserver:
@@ -201,7 +221,7 @@ hosts:
   "doh.pub": [1.12.12.12, 120.53.53.53]           # 固定腾讯 DNS IP
   "dns.cloudflare.com": [1.1.1.1, 1.0.0.1]       # 固定 Cloudflare DNS IP
   "dns.google": [8.8.8.8, 8.8.4.4]               # 固定 Google DNS IP
-  "services.googleapis.cn": ["services.googleapis.com"]  # Google 服务正确解析
+  "services.googleapis.cn": "services.googleapis.com"  # Google 服务正确解析（域名重定向，值必须是字符串）
   "+.mcdn.bilivideo.com": [0.0.0.0]               # 屏蔽 B 站 PCDN
   "+.mcdn.bilivideo.cn": [0.0.0.0]                # 屏蔽 B 站 PCDN
 ```
@@ -244,7 +264,7 @@ node -e "
 
 ```
 MyClash/
-├── ShiroRikka.js    # 主脚本 (v4.30) — GEOSITE/GEOIP 内置规则 + Loyalsoldier 数据源
+├── ShiroRikka.js    # 主脚本 (v4.35) — GEOSITE/GEOIP 内置规则 + MetaCubeX meta-rules-dat 数据源
 ├── README.md        # 本文档
 ├── AGENTS.md        # 开发规范与注意事项
 └── package.json     # 项目依赖

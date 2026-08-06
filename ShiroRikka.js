@@ -1,4 +1,4 @@
-// v4.34 — 修复 hosts 域名重定向格式、更新 AGENTS.md 规则数
+// v4.35 — 修复 fake-ip-range6 范围、同步 README 文档
 function main(config) {
   // 参数校验
   if (!config || typeof config !== "object") {
@@ -225,7 +225,7 @@ function main(config) {
     "use-system-hosts": true,
     "enhanced-mode": "fake-ip",
     "fake-ip-range": "198.18.0.1/16",
-    "fake-ip-range6": "fc00::/18",
+    "fake-ip-range6": "fdfe:dcba:9876::1/64",
     "fake-ip-filter": [
       "geosite:connectivity-check",
       "geosite:private",
