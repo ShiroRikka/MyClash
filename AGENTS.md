@@ -28,7 +28,7 @@ node -e "const yaml=require('js-yaml'),fs=require('fs'); const c=yaml.load(fs.re
 - **未匹配节点丢弃**：switch/case 不匹配的协议类型（vmess/shadowsocks/trojan/hysteria/socks5/http/direct 等）从 `config.proxies` 彻底删除（`ShiroRikka.js:72`）。
 - **空分组跳过**：某协议无节点时，该协议组及其 fallback 子组均不创建。`负载均衡` 的 `proxies` 和 `节点选择` 的选项列表自动适配。
 - **规则使用 GEOSITE/GEOIP 内置**，不需要 `rule-providers` 配置块。
-- **输出始终包含**：DNS（fake-ip + ARC）、Hosts（国内/国外 DNS 固定 IP + B 站 PCDN 屏蔽）、Sniffer（TLS/QUIC/HTTP 嗅探）、规则（白名单模式 7 条）。
+- **输出始终包含**：DNS（fake-ip + ARC）、Hosts（国内/国外 DNS 固定 IP + B 站 PCDN 屏蔽）、Sniffer（TLS/QUIC/HTTP 嗅探）、规则（白名单模式 8 条）。
 
 ## 每次修改后
 

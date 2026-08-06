@@ -1,4 +1,4 @@
-// v4.33 — 补充 profile 缓存、geox-url、nameserver-policy、ipcidr 过滤等文档规范改进
+// v4.34 — 修复 hosts 域名重定向格式、更新 AGENTS.md 规则数
 function main(config) {
   // 参数校验
   if (!config || typeof config !== "object") {
@@ -268,7 +268,7 @@ function main(config) {
     "doh.pub": ["1.12.12.12", "120.53.53.53"],
     "dns.cloudflare.com": ["1.1.1.1", "1.0.0.1"],
     "dns.google": ["8.8.8.8", "8.8.4.4"],
-    "services.googleapis.cn": ["services.googleapis.com"],
+    "services.googleapis.cn": "services.googleapis.com",
     "+.mcdn.bilivideo.com": ["0.0.0.0"],
     "+.mcdn.bilivideo.cn": ["0.0.0.0"],
   }
