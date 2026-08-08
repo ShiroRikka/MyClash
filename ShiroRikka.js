@@ -1,4 +1,4 @@
-// v4.36 — VLESS 筛选改为仅保留非空 reality-opts（纯 REALITY），去掉 network=xhttp
+// v4.37 — 新增 NaïveProxy / Trojan 分组；VLESS 分组显示名改为 VLESS+Reality
 function main(config) {
   // 参数校验
   if (!config || typeof config !== "object") {
@@ -24,6 +24,8 @@ function main(config) {
     vless: [],
     wireguard: [],
     mieru: [],
+    naive: [],
+    trojan: [],
   }
 
   // 收集被归类的节点对象，未归类的杂鱼直接丢弃
@@ -62,6 +64,15 @@ function main(config) {
         break
       case "mieru":
         protocolBins.mieru.push(proxy.name)
+        matchedProxies.push(proxy)
+        break
+      case "naive":
+      case "naïveproxy":
+        protocolBins.naive.push(proxy.name)
+        matchedProxies.push(proxy)
+        break
+      case "trojan":
+        protocolBins.trojan.push(proxy.name)
         matchedProxies.push(proxy)
         break
       // 其他协议类型不归入任何分组，直接丢弃
@@ -143,7 +154,7 @@ function main(config) {
   }
   if (protocolBins.vless.length > 0) {
     proxyGroups.push(
-      ...createProtocolGroup("VLESS", `${CDN_ICONS}vless.svg`, protocolBins.vless)
+      ...createProtocolGroup("VLESS+Reality", `${CDN_ICONS}vless.svg`, protocolBins.vless)
     )
   }
   if (protocolBins.wireguard.length > 0) {
@@ -156,8 +167,18 @@ function main(config) {
       ...createProtocolGroup("Mieru", `${CDN_ICONS}mieru.svg`, protocolBins.mieru)
     )
   }
+  if (protocolBins.naive.length > 0) {
+    proxyGroups.push(
+      ...createProtocolGroup("NaïveProxy", `${CDN_ICONS}naive.svg`, protocolBins.naive)
+    )
+  }
+  if (protocolBins.trojan.length > 0) {
+    proxyGroups.push(
+      ...createProtocolGroup("Trojan", `${CDN_ICONS}trojan.svg`, protocolBins.trojan)
+    )
+  }
 
-  const mainGroupNames = ["Hysteria2", "TUIC", "Masque", "AnyTLS", "VLESS", "WireGuard", "Mieru"]
+  const mainGroupNames = ["Hysteria2", "TUIC", "Masque", "AnyTLS", "VLESS+Reality", "WireGuard", "Mieru", "NaïveProxy", "Trojan"]
     .filter(n => proxyGroups.some(g => g.name === n))
 
   // 负载均衡（load-balance, hidden）— 在协议组间均衡分配流量

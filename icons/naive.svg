@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <defs>
+    <linearGradient id="naive-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00C2A8"/>
+      <stop offset="100%" stop-color="#009688"/>
+    </linearGradient>
+  </defs>
+  <!-- Chrome/SPDY 网络栈背景 -->
+  <path d="M100 15 L180 60 L180 140 L100 185 L20 140 L20 60 Z" fill="url(#naive-grad)" opacity="0.08"/>
+  <path d="M100 30 L165 65 L165 135 L100 170 L35 135 L35 65 Z" fill="url(#naive-grad)" opacity="0.10"/>
+  <!-- Stylized N letter (NaïveProxy) -->
+  <path d="M55 55 L55 145 L75 145 L75 95 L115 145 L145 145 L145 55 L125 55 L125 105 L85 55 Z" fill="#00C2A8"/>
+  <!-- 草稿/naïve 风格装饰点 -->
+  <circle cx="100" cy="150" r="4" fill="#00C2A8" opacity="0.5"/>
+</svg>
