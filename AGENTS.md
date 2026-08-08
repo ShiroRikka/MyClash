@@ -13,7 +13,7 @@
 npm install
 node -e "const yaml=require('js-yaml'),fs=require('fs'); const c=yaml.load(fs.readFileSync('Proxies.yaml','utf8')); console.log(yaml.dump(require('./ShiroRikka.js').main(c)))" > processed_config.yaml
 ```
-测试前需临时添加 `module.exports = { main }`，测试后删除。添加新协议图标时同步放入 `icons/` 目录。`npm test` 是空桩，无测试框架。
+测试前需临时添加 `module.exports = { main }`，测试后删除。添加新协议图标时同步放入 `icons/` 目录。`npm test` 运行 `test/main.test.js`（内存加载 + 回归用例，不写源文件）。
 
 ## 代码风格
 
@@ -24,7 +24,7 @@ node -e "const yaml=require('js-yaml'),fs=require('fs'); const c=yaml.load(fs.re
 
 ## 架构要点（代码中不易直接看出）
 
-- **VLESS 筛选**：仅保留 `network === "xhttp"` 或含 `reality-opts` 的节点（`ShiroRikka.js:54`），不再接受仅 `encryption`。
+- **VLESS 筛选**：仅保留含非空 `reality-opts` 的节点（纯 REALITY），不再接受 `network === "xhttp"` 或仅 `encryption`。
 - **未匹配节点丢弃**：switch/case 不匹配的协议类型（vmess/shadowsocks/trojan/hysteria/socks5/http/direct 等）从 `config.proxies` 彻底删除（`ShiroRikka.js:72`）。
 - **空分组跳过**：某协议无节点时，该协议组及其 fallback 子组均不创建。`负载均衡` 的 `proxies` 和 `节点选择` 的选项列表自动适配。
 - **规则使用 GEOSITE/GEOIP 内置**，不需要 `rule-providers` 配置块。

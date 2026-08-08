@@ -1,4 +1,4 @@
-// v4.35 — 修复 fake-ip-range6 范围、同步 README 文档
+// v4.36 — VLESS 筛选改为仅保留非空 reality-opts（纯 REALITY），去掉 network=xhttp
 function main(config) {
   // 参数校验
   if (!config || typeof config !== "object") {
@@ -50,8 +50,8 @@ function main(config) {
         matchedProxies.push(proxy)
         break
       case "vless":
-        // VLESS 节点：仅保留有 reality-opts（REALITY）或 network=xhttp（XHTTP）的节点
-        if (proxy.network === "xhttp" || proxy["reality-opts"]) {
+        // VLESS 节点：仅保留有 reality-opts 字段（且非空对象）的 REALITY 节点
+        if (proxy["reality-opts"] && typeof proxy["reality-opts"] === "object" && Object.keys(proxy["reality-opts"]).length > 0) {
           protocolBins.vless.push(proxy.name)
           matchedProxies.push(proxy)
         }

@@ -1,7 +1,7 @@
 # Mihomo (Clash Meta) 代理组生成脚本
 
 按代理协议类型自动分类，生成协议级 select 分组（含自动回退）。  
-**当前版本：v4.35**
+**当前版本：v4.36**
 
 ---
 
@@ -104,7 +104,7 @@ hidden: true
 | `tuic` | TUIC | 全部 |
 | `masque` | Masque | 全部 |
 | `anytls` | AnyTLS | 全部 |
-| `vless` | VLESS | **有 `reality-opts` / `network: xhttp` 任一即可**（去掉 `encryption` 条件） |
+| `vless` | VLESS | **仅保留含非空 `reality-opts` 的节点**（纯 REALITY，去掉 `network: xhttp` 条件） |
 | `wireguard` | WireGuard | 全部 |
 | `mieru` | Mieru | 全部 |
 | 其余（vmess / shadowsocks / trojan / hysteria / socks5 / http 等） | 不归入任何分组 | — |
@@ -232,6 +232,7 @@ hosts:
 
 ```bash
 npm install
+npm test    # 运行回归测试（内存加载 ShiroRikka.js，9 个用例验证 VLESS Reality 筛选）
 ```
 
 准备测试配置 `Proxies.yaml`（需含 `proxies` 数组，每个节点需 `type` 和 `name` 字段）：
@@ -264,7 +265,7 @@ node -e "
 
 ```
 MyClash/
-├── ShiroRikka.js    # 主脚本 (v4.35) — GEOSITE/GEOIP 内置规则 + MetaCubeX meta-rules-dat 数据源
+├── ShiroRikka.js    # 主脚本 (v4.36) — GEOSITE/GEOIP 内置规则 + MetaCubeX meta-rules-dat 数据源
 ├── README.md        # 本文档
 ├── AGENTS.md        # 开发规范与注意事项
 └── package.json     # 项目依赖
