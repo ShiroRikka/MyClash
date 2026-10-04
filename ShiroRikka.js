@@ -1,4 +1,4 @@
-// v4.38 — VLESS 分组显示名改回 VLESS，不再筛选 REALITY 节点
+// v4.41 — 清理 Mihomo 内核不识别的别名 hy2/shadowsocks/sockss（保留 socks5，内核实测接受）
 function main(config) {
   // 参数校验
   if (!config || typeof config !== "object") {
@@ -16,16 +16,26 @@ function main(config) {
   const CDN_ICONS = `${CDN}ShiroRikka/MyClash@main/icons/`
 
   // ===== 按协议类型分类节点 =====
+  // 覆盖 MetaCubeX/mihomo 文档收录的代理类型，避免主流订阅（vmess/ss/ssr）整段丢失
   const protocolBins = {
     hysteria2: [],
+    hysteria: [],
     tuic: [],
     masque: [],
     anytls: [],
     vless: [],
+    vmess: [],
+    ss: [],
+    ssr: [],
+    snell: [],
+    socks: [],
+    http: [],
+    shadowquic: [],
     wireguard: [],
     mieru: [],
-    naive: [],
     trojan: [],
+    tls: [],
+    ssh: [],
   }
 
   // 收集被归类的节点对象，未归类的杂鱼直接丢弃
@@ -35,8 +45,11 @@ function main(config) {
     const type = (proxy.type || "").toLowerCase()
     switch (type) {
       case "hysteria2":
-      case "hy2":
         protocolBins.hysteria2.push(proxy.name)
+        matchedProxies.push(proxy)
+        break
+      case "hysteria":
+        protocolBins.hysteria.push(proxy.name)
         matchedProxies.push(proxy)
         break
       case "tuic":
@@ -55,6 +68,35 @@ function main(config) {
         protocolBins.vless.push(proxy.name)
         matchedProxies.push(proxy)
         break
+      case "vmess":
+        protocolBins.vmess.push(proxy.name)
+        matchedProxies.push(proxy)
+        break
+      case "ss":
+        protocolBins.ss.push(proxy.name)
+        matchedProxies.push(proxy)
+        break
+      case "ssr":
+        protocolBins.ssr.push(proxy.name)
+        matchedProxies.push(proxy)
+        break
+      case "snell":
+        protocolBins.snell.push(proxy.name)
+        matchedProxies.push(proxy)
+        break
+      case "socks":
+      case "socks5":
+        protocolBins.socks.push(proxy.name)
+        matchedProxies.push(proxy)
+        break
+      case "http":
+        protocolBins.http.push(proxy.name)
+        matchedProxies.push(proxy)
+        break
+      case "shadowquic":
+        protocolBins.shadowquic.push(proxy.name)
+        matchedProxies.push(proxy)
+        break
       case "wireguard":
         protocolBins.wireguard.push(proxy.name)
         matchedProxies.push(proxy)
@@ -63,13 +105,16 @@ function main(config) {
         protocolBins.mieru.push(proxy.name)
         matchedProxies.push(proxy)
         break
-      case "naive":
-      case "naïveproxy":
-        protocolBins.naive.push(proxy.name)
-        matchedProxies.push(proxy)
-        break
       case "trojan":
         protocolBins.trojan.push(proxy.name)
+        matchedProxies.push(proxy)
+        break
+      case "tls":
+        protocolBins.tls.push(proxy.name)
+        matchedProxies.push(proxy)
+        break
+      case "ssh":
+        protocolBins.ssh.push(proxy.name)
         matchedProxies.push(proxy)
         break
       // 其他协议类型不归入任何分组，直接丢弃
@@ -87,11 +132,12 @@ function main(config) {
     "store-selected": true,
     "store-fake-ip": true,
   }
+  // 官方源：MetaCubeX/meta-rules-dat（geodata-mode=true 场景用 -lite 变体更精简）
   config["geox-url"] = {
-    geoip: "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geoip.dat",
-    geosite: "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geosite.dat",
-    mmdb: "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/country.mmdb",
-    asn: "https://github.com/xishang0128/geoip/releases/download/latest/GeoLite2-ASN.mmdb",
+    geoip: "https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip-lite.dat",
+    geosite: "https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat",
+    mmdb: "https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/country-lite.mmdb",
+    asn: "https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/GeoLite2-ASN.mmdb",
   }
 
   // ===== 策略组基础配置 =====
@@ -108,13 +154,12 @@ function main(config) {
   }
 
   // ===== 构建协议分组 =====
-  function createProtocolGroup(name, icon, proxies, extraOptions = {}) {
+  function createProtocolGroup(name, icon, proxies) {
     const fallbackName = `${name}-自动回退`
     return [
       {
         name: fallbackName,
         ...fallbackBaseOption,
-        ...extraOptions,
         icon: `${CDN_QURE}Auto.png`,
         proxies,
       },
@@ -127,56 +172,39 @@ function main(config) {
     ]
   }
 
+  // 协议分组清单：binKey → [显示名, 图标]
+  // 图标优先用仓库自带的 CDN_ICONS，未收录的协议回退到 Qure/Color/Proxy.png
+  const PROTOCOLS = [
+    ["hysteria2",    "Hysteria2",    `${CDN_ICONS}hysteria2.svg`],
+    ["hysteria",     "Hysteria",     `${CDN_QURE}Proxy.png`],
+    ["tuic",         "TUIC",         `${CDN_ICONS}tuic.svg`],
+    ["masque",       "Masque",       `${CDN_ICONS}masque.svg`],
+    ["anytls",       "AnyTLS",       `${CDN_ICONS}anytls.svg`],
+    ["vless",        "VLESS",        `${CDN_ICONS}vless.svg`],
+    ["vmess",        "VMess",        `${CDN_QURE}Proxy.png`],
+    ["ss",           "Shadowsocks",  `${CDN_QURE}Proxy.png`],
+    ["ssr",          "Shadowsocksr", `${CDN_QURE}Proxy.png`],
+    ["snell",        "Snell",        `${CDN_QURE}Proxy.png`],
+    ["socks",        "Socks",        `${CDN_QURE}Proxy.png`],
+    ["http",         "HTTP",         `${CDN_QURE}Proxy.png`],
+    ["shadowquic",   "ShadowQuic",   `${CDN_QURE}Proxy.png`],
+    ["wireguard",    "WireGuard",    `${CDN_ICONS}wireguard.svg`],
+    ["mieru",        "Mieru",        `${CDN_ICONS}mieru.svg`],
+    ["trojan",       "Trojan",       `${CDN_ICONS}trojan.svg`],
+    ["tls",          "TLS",          `${CDN_QURE}Proxy.png`],
+    ["ssh",          "SSH",          `${CDN_QURE}Proxy.png`],
+  ]
+
   const proxyGroups = []
+  const mainGroupNames = []
 
-  if (protocolBins.hysteria2.length > 0) {
-    proxyGroups.push(
-      ...createProtocolGroup("Hysteria2", `${CDN_ICONS}hysteria2.svg`, protocolBins.hysteria2)
-    )
+  for (const [binKey, groupName, icon] of PROTOCOLS) {
+    const nodes = protocolBins[binKey]
+    if (nodes.length > 0) {
+      proxyGroups.push(...createProtocolGroup(groupName, icon, nodes))
+      mainGroupNames.push(groupName)
+    }
   }
-  if (protocolBins.tuic.length > 0) {
-    proxyGroups.push(
-      ...createProtocolGroup("TUIC", `${CDN_ICONS}tuic.svg`, protocolBins.tuic)
-    )
-  }
-  if (protocolBins.masque.length > 0) {
-    proxyGroups.push(
-      ...createProtocolGroup("Masque", `${CDN_ICONS}masque.svg`, protocolBins.masque)
-    )
-  }
-  if (protocolBins.anytls.length > 0) {
-    proxyGroups.push(
-      ...createProtocolGroup("AnyTLS", `${CDN_ICONS}anytls.svg`, protocolBins.anytls)
-    )
-  }
-  if (protocolBins.vless.length > 0) {
-    proxyGroups.push(
-      ...createProtocolGroup("VLESS", `${CDN_ICONS}vless.svg`, protocolBins.vless)
-    )
-  }
-  if (protocolBins.wireguard.length > 0) {
-    proxyGroups.push(
-      ...createProtocolGroup("WireGuard", `${CDN_ICONS}wireguard.svg`, protocolBins.wireguard)
-    )
-  }
-  if (protocolBins.mieru.length > 0) {
-    proxyGroups.push(
-      ...createProtocolGroup("Mieru", `${CDN_ICONS}mieru.svg`, protocolBins.mieru)
-    )
-  }
-  if (protocolBins.naive.length > 0) {
-    proxyGroups.push(
-      ...createProtocolGroup("NaïveProxy", `${CDN_ICONS}naive.svg`, protocolBins.naive)
-    )
-  }
-  if (protocolBins.trojan.length > 0) {
-    proxyGroups.push(
-      ...createProtocolGroup("Trojan", `${CDN_ICONS}trojan.svg`, protocolBins.trojan)
-    )
-  }
-
-  const mainGroupNames = ["Hysteria2", "TUIC", "Masque", "AnyTLS", "VLESS", "WireGuard", "Mieru", "NaïveProxy", "Trojan"]
-    .filter(n => proxyGroups.some(g => g.name === n))
 
   // 负载均衡（load-balance, hidden）— 在协议组间均衡分配流量
   if (mainGroupNames.length > 0) {
@@ -213,15 +241,12 @@ function main(config) {
     type: "select",
     proxies: ["节点选择", "DIRECT"],
   })
-  // GLOBAL
+  // GLOBAL — 按文档建议书写完整：包含所有非 GLOBAL 分组（含 -自动回退 子组与负载均衡）
   proxyGroups.push({
     name: "GLOBAL",
     icon: `${CDN_QURE}Global.png`,
     type: "select",
-    proxies: [
-      "节点选择", "漏网之鱼",
-            ...mainGroupNames,
-    ],
+    proxies: proxyGroups.map(g => g.name),
   })
 
   // 将「节点选择」移到最前面
@@ -248,7 +273,7 @@ function main(config) {
       "geosite:connectivity-check",
       "geosite:private",
     ],
-    "proxy-server-nameserver": ["https://dns.alidns.com/dns-query#DIRECT", "https://doh.pub/dns-query#DIRECT"],
+    "proxy-server-nameserver": ["https://dns.alidns.com/dns-query#DIRECT", "https://dns.doh.pub/dns-query#DIRECT"],
     "default-nameserver": ["223.5.5.5", "119.29.29.29"],
     "nameserver-policy": {
       "geosite:gfw": [
@@ -258,7 +283,7 @@ function main(config) {
     },
     nameserver: [
       "https://dns.alidns.com/dns-query",
-      "https://doh.pub/dns-query",
+      "https://dns.doh.pub/dns-query",
     ],
     fallback: [
       "https://dns.cloudflare.com/dns-query#节点选择",
@@ -276,13 +301,14 @@ function main(config) {
     },
     "direct-nameserver": [
       "https://dns.alidns.com/dns-query#DIRECT",
-      "https://doh.pub/dns-query#DIRECT",
+      "https://dns.doh.pub/dns-query#DIRECT",
     ],
   }
 
   // ===== Hosts =====
   config.hosts = {
     "dns.alidns.com": ["223.5.5.5", "223.6.6.6"],
+    "dns.doh.pub": ["1.12.12.12", "120.53.53.53"],
     "doh.pub": ["1.12.12.12", "120.53.53.53"],
     "dns.cloudflare.com": ["1.1.1.1", "1.0.0.1"],
     "dns.google": ["8.8.8.8", "8.8.4.4"],
@@ -318,18 +344,19 @@ function main(config) {
   }
 
   // ===== Rules =====
+  // GEOIP 国家代码统一大写，对齐文档示例
   config["rules"] = [
     // 广告拦截（最优先）
     "GEOSITE,category-ads-all,REJECT",
     // 私有域名直连
     "GEOSITE,private,DIRECT",
     // 国内域名直连
-    "GEOSITE,cn,DIRECT",
+    "GEOSITE,CN,DIRECT",
     // 国外域名走代理
     "GEOSITE,geolocation-!cn,节点选择",
     // IP 规则
     "GEOIP,private,DIRECT,no-resolve",
-    "GEOIP,cn,DIRECT,no-resolve",
+    "GEOIP,CN,DIRECT,no-resolve",
     "GEOIP,telegram,节点选择,no-resolve",
     // 兜底
     "MATCH,漏网之鱼",

@@ -1,7 +1,7 @@
 # Mihomo (Clash Meta) 代理组生成脚本
 
-按代理协议类型自动分类，生成协议级 select 分组（含自动回退）。  
-**当前版本：v4.37**
+按代理协议类型自动分类，生成协议级 select 分组（含自动回退）。
+**当前版本：v4.41**
 
 ---
 
@@ -28,35 +28,35 @@ script:
 ## 分组架构
 
 ```
-GLOBAL (select)
+GLOBAL (select)  ← 包含所有非 GLOBAL 分组（按文档建议书写完整）
 │
 ├─ 节点选择 (select)                  ← 主入口，含 DIRECT
 │   ├─ 负载均衡 (load-balance, hidden)     ← 全局负载均衡（协议组间 round-robin）
-│   │   ├─ Hysteria2 (select)         ← 默认=自动回退
-│   │   ├─ TUIC (select)              ← 同上
-│   │   ├─ Masque (select)            ← 同上
-│   │   ├─ AnyTLS (select)            ← 同上
-│   │   ├─ VLESS (select)             ← 同上
-│   │   ├─ WireGuard (select)         ← 同上
-│   │   ├─ Mieru (select)             ← 同上
-│   │   ├─ NaïveProxy (select)        ← 同上
-│   │   ├─ Trojan (select)            ← 同上
-│   │   └─ …其他协议组…
+│   ├─ Hysteria2 (select)         ← 默认=自动回退
+│   ├─ Hysteria (select)
+│   ├─ TUIC (select)              ← 同上
+│   ├─ Masque (select)            ← 同上
+│   ├─ AnyTLS (select)            ← 同上
+│   ├─ VLESS (select)             ← 同上
+│   ├─ VMess (select)
+│   ├─ Shadowsocks (select)
+│   ├─ Shadowsocksr (select)
+│   ├─ Snell (select)
+│   ├─ Socks (select)
+│   ├─ HTTP (select)
+│   ├─ ShadowQuic (select)
+│   ├─ WireGuard (select)         ← 同上
+│   ├─ Mieru (select)             ← 同上
+│   ├─ Trojan (select)            ← 同上
+│   ├─ TLS (select)
+│   ├─ SSH (select)
 │   ├─ Hysteria2 (select)             ← 手动选协议组
 │   │   ├─ Hysteria2-自动回退 (fallback, hidden)
 │   │   └─ [该协议所有节点]
-│   ├─ TUIC (select)                  ← 同上
-│   ├─ Masque (select)                ← 同上
-│   ├─ AnyTLS (select)                ← 同上
-│   ├─ VLESS (select)                 ← 同上
-│   ├─ WireGuard (select)             ← 同上
-│   ├─ Mieru (select)                 ← 同上
-│   ├─ NaïveProxy (select)            ← 同上
-│   ├─ Trojan (select)                ← 同上
-│   ├─ …其他协议组…
+│   ├─ …其他协议组同构…
 │   └─ DIRECT
 │
-├─ 漏网之鱼 (select)                  → 节点选择 / DIRECT
+└─ 漏网之鱼 (select)                  → 节点选择 / DIRECT
 ```
 
 ### 分组说明
@@ -65,10 +65,10 @@ GLOBAL (select)
 |------|------|------|
 | **节点选择** | `select` | 主入口，包含负载均衡 + 各协议组 + DIRECT |
 | **负载均衡** | `load-balance` (hidden) | 在协议组间 round-robin 轮询分发流量 |
-| **Hysteria2 / TUIC / Masque / AnyTLS / VLESS / WireGuard / Mieru / NaïveProxy / Trojan** | `select` | 单协议组，默认=自动回退，含自动回退 + 所有节点 |
+| **Hysteria2 / Hysteria / TUIC / Masque / AnyTLS / VLESS / VMess / Shadowsocks / Shadowsocksr / Snell / Socks / HTTP / ShadowQuic / WireGuard / Mieru / Trojan / TLS / SSH** | `select` | 单协议组，默认=自动回退，含自动回退 + 所有节点 |
 | **{name}-自动回退** | `fallback` (hidden) | 按顺序选第一个可用节点，稳定优先（默认策略） |
 | **漏网之鱼** | `select` | 默认走节点选择，可手动切直连 |
-| **GLOBAL** | `select` | 顶层主控，包含所有分组 |
+| **GLOBAL** | `select` | 顶层主控，包含所有非 GLOBAL 分组（按文档 `built-in.md` 建议书写完整） |
 
 ### 自动策略参数
 
@@ -104,22 +104,34 @@ hidden: true
 
 ## 分类规则
 
-脚本读取每个代理节点的 `type` 字段，自动归类：
+脚本读取每个代理节点的 `type` 字段（大小写不敏感），自动归类：
 
-| 代理类型 `proxy.type` | 归入分组 |  筛选条件  |
-|----------------------|---------|-----------|
-| `hysteria2` / `hy2` | Hysteria2 | 全部 |
-| `tuic` | TUIC | 全部 |
-| `masque` | Masque | 全部 |
-| `anytls` | AnyTLS | 全部 |
-| `vless` | VLESS | 全部 |
-| `wireguard` | WireGuard | 全部 |
-| `mieru` | Mieru | 全部 |
-| `naive` / `naïveproxy` | NaïveProxy | 全部 |
-| `trojan` | Trojan | 全部 |
-| 其余（vmess / shadowsocks / hysteria / socks5 / http 等） | 不归入任何分组 | — |
+| 代理类型 `proxy.type` | 归入分组 |
+|----------------------|---------|
+| `hysteria2` | Hysteria2 |
+| `hysteria` | Hysteria |
+| `tuic` | TUIC |
+| `masque` | Masque |
+| `anytls` | AnyTLS |
+| `vless` | VLESS |
+| `vmess` | VMess |
+| `ss` | Shadowsocks |
+| `ssr` | Shadowsocksr |
+| `snell` | Snell |
+| `socks` / `socks5` | Socks |
+| `http` | HTTP |
+| `shadowquic` | ShadowQuic |
+| `wireguard` | WireGuard |
+| `mieru` | Mieru |
+| `trojan` | Trojan |
+| `tls` | TLS |
+| `ssh` | SSH |
+| 其余（easytier / tailscale / openvpn / sudoku / trusttunnel / zerotier / direct / dns 等） | 不归入任何分组，静默丢弃 |
 
 > 不需要在节点名中添加特殊标记，脚本直接从 `proxy.type` 识别协议类型。
+
+> ⚠️ **别名处理：** 仅保留 Mihomo 内核实测能识别的别名（`socks5`），其余（`hy2`、`shadowsocks`、`sockss`）已清理，避免订阅导入后节点被内核拒绝报错。
+> **NaïveProxy** 已从 v4.40 起移除，因为 Mihomo 内核不支持该协议（文档也未收录），保留只会让内核报错。
 
 ### 空分组容错
 
@@ -138,15 +150,15 @@ GEOSITE,category-ads-all,REJECT
 # 私有域名直连
 GEOSITE,private,DIRECT
 
-# 国内域名直连（Loyalsoldier 增强版 cn，含 apple-cn/google-cn/tld-cn 等）
-GEOSITE,cn,DIRECT
+# 国内域名直连（Loyalsoldier 增强版 CN，含 apple-cn/google-cn/tld-cn 等）
+GEOSITE,CN,DIRECT
 
 # 国外域名走代理（含 GFW、Google、Telegram 等）
 GEOSITE,geolocation-!cn,节点选择
 
 # IP 规则
 GEOIP,private,DIRECT,no-resolve
-GEOIP,cn,DIRECT,no-resolve
+GEOIP,CN,DIRECT,no-resolve
 GEOIP,telegram,节点选择,no-resolve
 
 # 兜底 → 漏网之鱼（用户可在面板切换走代理或直连）
@@ -188,14 +200,14 @@ dns:
   # 代理服务器 DNS（走 DIRECT 避免死循环）
   proxy-server-nameserver:
     - https://dns.alidns.com/dns-query#DIRECT
-    - https://doh.pub/dns-query#DIRECT
+    - https://dns.doh.pub/dns-query#DIRECT
 
   default-nameserver: [223.5.5.5, 119.29.29.29]
 
   # 国内域名 DNS（直连，纯净快速）
   nameserver:
     - https://dns.alidns.com/dns-query
-    - https://doh.pub/dns-query
+    - https://dns.doh.pub/dns-query
 
   # GFW 域名 DNS（通过代理防污染）
   nameserver-policy:
@@ -220,7 +232,7 @@ dns:
   # 直连流量 DNS（使用纯净 DoH，减少劫持）
   direct-nameserver:
     - https://dns.alidns.com/dns-query#DIRECT
-    - https://doh.pub/dns-query#DIRECT
+    - https://dns.doh.pub/dns-query#DIRECT
 ```
 
 ### Hosts 映射
@@ -228,7 +240,8 @@ dns:
 ```yaml
 hosts:
   "dns.alidns.com": [223.5.5.5, 223.6.6.6]      # 固定阿里 DNS IP
-  "doh.pub": [1.12.12.12, 120.53.53.53]           # 固定腾讯 DNS IP
+  "dns.doh.pub": [1.12.12.12, 120.53.53.53]     # 固定腾讯 DNS IP（规范名，避免 302 跳转）
+  "doh.pub": [1.12.12.12, 120.53.53.53]         # 兼容旧域名
   "dns.cloudflare.com": [1.1.1.1, 1.0.0.1]       # 固定 Cloudflare DNS IP
   "dns.google": [8.8.8.8, 8.8.4.4]               # 固定 Google DNS IP
   "services.googleapis.cn": "services.googleapis.com"  # Google 服务正确解析（域名重定向，值必须是字符串）
@@ -242,7 +255,7 @@ hosts:
 
 ```bash
 npm install
-npm test    # 运行回归测试（内存加载 ShiroRikka.js，9 个用例验证协议归类与分组生成）
+npm test    # 运行回归测试（内存加载 ShiroRikka.js，26 个协议用例 + 分组结构验证）
 ```
 
 准备测试配置 `Proxies.yaml`（需含 `proxies` 数组，每个节点需 `type` 和 `name` 字段）：
@@ -275,7 +288,7 @@ node -e "
 
 ```
 MyClash/
-├── ShiroRikka.js    # 主脚本 (v4.38) — GEOSITE/GEOIP 内置规则 + MetaCubeX meta-rules-dat 数据源
+├── ShiroRikka.js    # 主脚本 (v4.41) — GEOSITE/GEOIP 内置规则 + MetaCubeX meta-rules-dat 数据源
 ├── README.md        # 本文档
 ├── AGENTS.md        # 开发规范与注意事项
 └── package.json     # 项目依赖
