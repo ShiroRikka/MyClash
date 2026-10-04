@@ -24,7 +24,7 @@ node -e "const yaml=require('js-yaml'),fs=require('fs'); const c=yaml.load(fs.re
 
 ## 架构要点（代码中不易直接看出）
 
-- **VLESS 筛选**：仅保留含非空 `reality-opts` 的节点（纯 REALITY），不再接受 `network === "xhttp"` 或仅 `encryption`。
+- **VLESS 归类**：按 `type === "vless"` 直接归类，不再筛选 `reality-opts` 等字段。
 - **未匹配节点丢弃**：switch/case 不匹配的协议类型（vmess/shadowsocks/trojan/hysteria/socks5/http/direct 等）从 `config.proxies` 彻底删除（`ShiroRikka.js:72`）。
 - **空分组跳过**：某协议无节点时，该协议组及其 fallback 子组均不创建。`负载均衡` 的 `proxies` 和 `节点选择` 的选项列表自动适配。
 - **规则使用 GEOSITE/GEOIP 内置**，不需要 `rule-providers` 配置块。

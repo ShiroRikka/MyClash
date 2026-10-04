@@ -1,4 +1,4 @@
-// v4.37 — 新增 NaïveProxy / Trojan 分组；VLESS 分组显示名改为 VLESS+Reality
+// v4.38 — VLESS 分组显示名改回 VLESS，不再筛选 REALITY 节点
 function main(config) {
   // 参数校验
   if (!config || typeof config !== "object") {
@@ -52,11 +52,8 @@ function main(config) {
         matchedProxies.push(proxy)
         break
       case "vless":
-        // VLESS 节点：仅保留有 reality-opts 字段（且非空对象）的 REALITY 节点
-        if (proxy["reality-opts"] && typeof proxy["reality-opts"] === "object" && Object.keys(proxy["reality-opts"]).length > 0) {
-          protocolBins.vless.push(proxy.name)
-          matchedProxies.push(proxy)
-        }
+        protocolBins.vless.push(proxy.name)
+        matchedProxies.push(proxy)
         break
       case "wireguard":
         protocolBins.wireguard.push(proxy.name)
@@ -154,7 +151,7 @@ function main(config) {
   }
   if (protocolBins.vless.length > 0) {
     proxyGroups.push(
-      ...createProtocolGroup("VLESS+Reality", `${CDN_ICONS}vless.svg`, protocolBins.vless)
+      ...createProtocolGroup("VLESS", `${CDN_ICONS}vless.svg`, protocolBins.vless)
     )
   }
   if (protocolBins.wireguard.length > 0) {
@@ -178,7 +175,7 @@ function main(config) {
     )
   }
 
-  const mainGroupNames = ["Hysteria2", "TUIC", "Masque", "AnyTLS", "VLESS+Reality", "WireGuard", "Mieru", "NaïveProxy", "Trojan"]
+  const mainGroupNames = ["Hysteria2", "TUIC", "Masque", "AnyTLS", "VLESS", "WireGuard", "Mieru", "NaïveProxy", "Trojan"]
     .filter(n => proxyGroups.some(g => g.name === n))
 
   // 负载均衡（load-balance, hidden）— 在协议组间均衡分配流量

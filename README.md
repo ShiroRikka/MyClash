@@ -36,7 +36,7 @@ GLOBAL (select)
 │   │   ├─ TUIC (select)              ← 同上
 │   │   ├─ Masque (select)            ← 同上
 │   │   ├─ AnyTLS (select)            ← 同上
-│   │   ├─ VLESS+Reality (select)     ← 同上
+│   │   ├─ VLESS (select)             ← 同上
 │   │   ├─ WireGuard (select)         ← 同上
 │   │   ├─ Mieru (select)             ← 同上
 │   │   ├─ NaïveProxy (select)        ← 同上
@@ -48,7 +48,7 @@ GLOBAL (select)
 │   ├─ TUIC (select)                  ← 同上
 │   ├─ Masque (select)                ← 同上
 │   ├─ AnyTLS (select)                ← 同上
-│   ├─ VLESS+Reality (select)         ← 同上
+│   ├─ VLESS (select)                 ← 同上
 │   ├─ WireGuard (select)             ← 同上
 │   ├─ Mieru (select)                 ← 同上
 │   ├─ NaïveProxy (select)            ← 同上
@@ -65,7 +65,7 @@ GLOBAL (select)
 |------|------|------|
 | **节点选择** | `select` | 主入口，包含负载均衡 + 各协议组 + DIRECT |
 | **负载均衡** | `load-balance` (hidden) | 在协议组间 round-robin 轮询分发流量 |
-| **Hysteria2 / TUIC / Masque / AnyTLS / VLESS+Reality / WireGuard / Mieru / NaïveProxy / Trojan** | `select` | 单协议组，默认=自动回退，含自动回退 + 所有节点 |
+| **Hysteria2 / TUIC / Masque / AnyTLS / VLESS / WireGuard / Mieru / NaïveProxy / Trojan** | `select` | 单协议组，默认=自动回退，含自动回退 + 所有节点 |
 | **{name}-自动回退** | `fallback` (hidden) | 按顺序选第一个可用节点，稳定优先（默认策略） |
 | **漏网之鱼** | `select` | 默认走节点选择，可手动切直连 |
 | **GLOBAL** | `select` | 顶层主控，包含所有分组 |
@@ -112,7 +112,7 @@ hidden: true
 | `tuic` | TUIC | 全部 |
 | `masque` | Masque | 全部 |
 | `anytls` | AnyTLS | 全部 |
-| `vless` | VLESS+Reality | **仅保留含非空 `reality-opts` 的节点**（纯 REALITY，去掉 `network: xhttp` 条件） |
+| `vless` | VLESS | 全部 |
 | `wireguard` | WireGuard | 全部 |
 | `mieru` | Mieru | 全部 |
 | `naive` / `naïveproxy` | NaïveProxy | 全部 |
@@ -242,7 +242,7 @@ hosts:
 
 ```bash
 npm install
-npm test    # 运行回归测试（内存加载 ShiroRikka.js，9 个用例验证 VLESS Reality 筛选）
+npm test    # 运行回归测试（内存加载 ShiroRikka.js，9 个用例验证协议归类与分组生成）
 ```
 
 准备测试配置 `Proxies.yaml`（需含 `proxies` 数组，每个节点需 `type` 和 `name` 字段）：
@@ -275,7 +275,7 @@ node -e "
 
 ```
 MyClash/
-├── ShiroRikka.js    # 主脚本 (v4.37) — GEOSITE/GEOIP 内置规则 + MetaCubeX meta-rules-dat 数据源
+├── ShiroRikka.js    # 主脚本 (v4.38) — GEOSITE/GEOIP 内置规则 + MetaCubeX meta-rules-dat 数据源
 ├── README.md        # 本文档
 ├── AGENTS.md        # 开发规范与注意事项
 └── package.json     # 项目依赖
